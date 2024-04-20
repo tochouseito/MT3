@@ -1,6 +1,154 @@
 #include <Novice.h>
 #include<Matrix4x4.h>
+#include<Vector3.h>
+#include <assert.h>
+#include<cmath>
+#include <math.h>
+#define N 4 //逆行列を求める行列の行数・列数 
+const char kWindowTitle[] = "LE2B_27_ヤラ_チョウセイ";
+// 行列の積
+Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result = { 0 };
+	for (int i = 0; i < N; ++i) {
+		for (int j = 0; j < N; ++j) {
+			for (int k = 0; k < N; ++k) {
+				result.m[i][j] += m1.m[i][k] * m2.m[k][j];
+			}
+		}
+	}
 
+	return result;
+}
+// １．平行移動行列
+Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
+	Matrix4x4 result;
+	result.m[0][0] = 1.0f;
+	result.m[1][0] = 0.0f;
+	result.m[2][0] = 0.0f;
+	result.m[3][0] = translate.x;
+	result.m[0][1] = 0.0f;
+	result.m[1][1] = 1.0f;
+	result.m[2][1] = 0.0f;
+	result.m[3][1] = translate.y;
+	result.m[0][2] = 0.0f;
+	result.m[1][2] = 0.0f;
+	result.m[2][2] = 1.0f;
+	result.m[3][2] = translate.z;
+	result.m[0][3] = 0.0f;
+	result.m[1][3] = 0.0f;
+	result.m[2][3] = 0.0f;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+// ２．拡大縮小行列
+Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
+	Matrix4x4 result;
+	result.m[0][0] = scale.x;
+	result.m[1][0] = 0.0f;
+	result.m[2][0] = 0.0f;
+	result.m[3][0] = 0.0f;
+	result.m[0][1] = 0.0f;
+	result.m[1][1] = scale.y;
+	result.m[2][1] = 0.0f;
+	result.m[3][1] = 0.0f;
+	result.m[0][2] = 0.0f;
+	result.m[1][2] = 0.0f;
+	result.m[2][2] = scale.z;
+	result.m[3][2] = 0.0f;
+	result.m[0][3] = 0.0f;
+	result.m[1][3] = 0.0f;
+	result.m[2][3] = 0.0f;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+// ３．座標変換
+Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix) {
+	Vector3 result;
+	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + matrix.m[3][0];
+	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + matrix.m[3][1];
+	result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + matrix.m[3][2];
+	float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] + matrix.m[2][3];
+	assert(w != 0.0f);
+	result.x /= w;
+	result.y /= w;
+	result.z /= w;
+	return result;
+}
+// ４．X軸回転行列
+Matrix4x4 MakeRotateXMatrix(float radian) {
+	Matrix4x4 result;
+	result.m[0][0] = 1.0f;
+	result.m[1][0] = 0.0f;
+	result.m[2][0] = 0.0f;
+	result.m[3][0] = 0.0f;
+	result.m[0][1] = 0.0f;
+	result.m[1][1] = std::cosf(radian);
+	result.m[2][1] = -std::sinf(radian);
+	result.m[3][1] = 0.0f;
+	result.m[0][2] = 0.0f;
+	result.m[1][2] = std::sinf(radian);
+	result.m[2][2] = std::cosf(radian);
+	result.m[3][2] = 0.0f;
+	result.m[0][3] = 0.0f;
+	result.m[1][3] = 0.0f;
+	result.m[2][3] = 0.0f;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+// ５．Y軸回転行列
+Matrix4x4 MakeRotateYMatrix(float radian) {
+	Matrix4x4 result;
+	result.m[0][0] = std::cosf(radian);
+	result.m[1][0] = 0.0f;
+	result.m[2][0] = std::sinf(radian);
+	result.m[3][0] = 0.0f;
+	result.m[0][1] = 0.0f;
+	result.m[1][1] = 1.0f;
+	result.m[2][1] = 0.0f;
+	result.m[3][1] = 0.0f;
+	result.m[0][2] = -std::sinf(radian);
+	result.m[1][2] = 0.0f;
+	result.m[2][2] = std::cosf(radian);
+	result.m[3][2] = 0.0f;
+	result.m[0][3] = 0.0f;
+	result.m[1][3] = 0.0f;
+	result.m[2][3] = 0.0f;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+// ６．Z軸回転行列
+Matrix4x4 MakeRotateZMatrix(float radian) {
+	Matrix4x4 result;
+	result.m[0][0] = std::cosf(radian);
+	result.m[1][0] = -std::sinf(radian);
+	result.m[2][0] = 0.0f;
+	result.m[3][0] = 0.0f;
+	result.m[0][1] = std::sinf(radian);
+	result.m[1][1] = std::cosf(radian);
+	result.m[2][1] = 0.0f;
+	result.m[3][1] = 0.0f;
+	result.m[0][2] = 0.0f;
+	result.m[1][2] = 0.0f;
+	result.m[2][2] = 1.0f;
+	result.m[3][2] = 0.0f;
+	result.m[0][3] = 0.0f;
+	result.m[1][3] = 0.0f;
+	result.m[2][3] = 0.0f;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+// 3次元アフィン変換行列
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate,  const Vector3& translate) {
+	Matrix4x4 result;
+	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
+	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+	Matrix4x4 rotateXYZMatrix = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
+	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
+	result = Multiply(rotateXYZMatrix, Multiply(scaleMatrix, translateMatrix));
+	return result;
+}
 static const int kRowHeight = 20;
 static const int kColumnWidth = 60;
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix) {
@@ -10,32 +158,24 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix) {
 		}
 	}
 }
-
+void VectorScreenPrintf(int x, int y, Vector3 vector) {
+	Novice::ScreenPrintf(x, y, "%.02f", vector.x);
+	Novice::ScreenPrintf(x + kColumnWidth, y, "%.02f", vector.y);
+	Novice::ScreenPrintf(x + kColumnWidth * 2, y, "%.02f", vector.z);
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	Matrix4x4 m1 = { 3.2f,0.7f,9.6f,4.4f,
-				  5.5f,1.3f,7.8f,2.1f,
-				  6.9f,8.0f,2.6f,1.0f,
-				  0.5f,7.2f,5.1f,3.3f };
-	Matrix4x4 m2 = { 4.1f,6.5f,3.3f,2.2f,
-				8.8f,0.6f,9.9f,7.7f,
-				1.1f,5.5f,6.6f,0.0f,
-				3.3f,9.9f,8.8f,2.2f };
-	Matrix4x4 resultAdd = Add(m1, m2);
-	Matrix4x4 resultMultiply = Multiply(m1, m2);
-	Matrix4x4 resultSubtract = Subtract(m1, m2);
-	Matrix4x4 inverseM1 = Inverse(m1);
-	Matrix4x4 inverseM2 = Inverse(m2);
-	Matrix4x4 transposeM1 = Transpose(m1);
-	Matrix4x4 transposeM2 = Transpose(m2);
-	Matrix4x4 identity = MakeIdentity4x4();
+
 	// ライブラリの初期化
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
-
+	Vector3 scale{ 1.2f,0.79f,-2.1f };
+	Vector3 rotate{ 0.4f,1.43f,-0.8f };
+	Vector3 translate{ 2.7f,-4.15f,1.57f };
+	Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -48,20 +188,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		Vector3 translate{ 4.1f,2.6f,0.8f };
-		Vector3 scale{ 1.5f,5.2f,7.3f };
-		Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
-		Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
-		Vector3 point{ 2.3f,3.8f,1.4f };
-		Matrix4x4 transformMatrix = {
-			1.0f,2.0f,3.0f,4.0f,
-			3.0f,1.0f,1.0f,2.0f,
-			1.0f,4.0f,2.0f,3.0f,
-			2.0f,2.0f,1.0f,3.0f
-		};
-		Vector3 transformed = Transform(point, transformMatrix);
-
-
+		
 
 		///
 		/// ↑更新処理ここまで
@@ -70,7 +197,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-
+		MatrixScreenPrintf(0, 0, worldMatrix);
+		
 		///
 		/// ↑描画処理ここまで
 		///
