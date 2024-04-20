@@ -16,6 +16,7 @@ Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 			}
 		}
 	}
+
 	return result;
 }
 // １．平行移動行列
@@ -145,7 +146,7 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate,  const V
 	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
 	Matrix4x4 rotateXYZMatrix = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
 	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
-	result = Multiply(translateMatrix, Multiply(scaleMatrix, rotateXYZMatrix));
+	result = Multiply(rotateXYZMatrix, Multiply(scaleMatrix, translateMatrix));
 	return result;
 }
 static const int kRowHeight = 20;
