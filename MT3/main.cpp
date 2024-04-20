@@ -173,7 +173,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		Vector3 rotate{ 0.4f,1.43f,-0.0f };
+		Vector3 rotate{ 0.4f,1.43f,-0.8f };
 		Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
 		Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
 		Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
