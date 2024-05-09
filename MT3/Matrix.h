@@ -4,8 +4,55 @@
 #include<Vector3.h>
 #include <assert.h>
 #include<cmath>
-#include <math.h>
+
 #define N 4 //逆行列を求める行列の行数・列数 
+#include <math.h>
+#define _USE_MATH_DEFINES
+// 加算
+Vector3 Add(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x + v2.x;
+	result.y = v1.y + v2.y;
+	result.z = v1.z + v2.z;
+	return result;
+}
+// 減算
+Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+	result.z = v1.z - v2.z;
+	return result;
+}
+// スカラー倍
+Vector3 Multiply(float scalar, const Vector3& v) {
+	Vector3 result;
+	result.x = v.x * scalar;
+	result.y = v.y * scalar;
+	result.z = v.z * scalar;
+	return result;
+}
+// 内積
+float Dot(const Vector3& v1, const Vector3& v2) {
+	float result;
+	result = (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+	return result;
+}
+// 長さ（ノルム）
+float Length(const Vector3& v) {
+	float result;
+	result = float(sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	return result;
+}
+// 正規化
+Vector3 Normalize(const Vector3& v) {
+	Vector3 result;
+	result.x = float(v.x / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	result.y = float(v.y / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	result.z = float(v.z / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+
+	return result;
+}
 int check(double mat[N][N], double inv[N][N]) {
 
 	double inner_product;
@@ -49,6 +96,7 @@ Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
 	}
 	return result;
 }
+/*
 Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
 	result.x = v1.x - v2.x;
@@ -56,6 +104,7 @@ Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 	result.z = v1.z - v2.z;
 	return result;
 }
+*/
 // 転置行列
 Matrix4x4 Transpose(const Matrix4x4& m) {
 	Matrix4x4 result = { 0 };
@@ -416,111 +465,11 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	result.z = (v1.x * v2.y) - (v1.y * v2.x);
 	return result;
 }
+/*
 float Dot(const Vector3& v1,const Vector3& v2 ) {
 	float result;
 	result = (v1.x * v2.x) + (v1.y * v2.y)+ (v1.z * v2.z);
 	return result;
 }
-struct Sphere {
-	Vector3 center; // !< 中心点
-	float radius;   // !< 半径
-};
-void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
-	const float kGridHalfWidth = 2.0f;                                      // グリッドの半分の幅
-	const uint32_t kSubdivision = 10;                                       // 分割数
-	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision); // 1つの長さ
+*/
 
-	// 奥から手前への線を順々に引いていく
-	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
-		// ワールド座標系上の始点と終点を求める
-		Vector3 worldStartPos = { -kGridHalfWidth + xIndex * kGridEvery, 0.0f, -kGridHalfWidth };
-		Vector3 worldEndPos = { -kGridHalfWidth + xIndex * kGridEvery, 0.0f, kGridHalfWidth };
-
-		// ビュープロジェクションマトリックスを使ってクリップ座標系に変換
-		Vector3 clipStartPos = Transform(worldStartPos, viewProjectionMatrix);
-		Vector3 clipEndPos = Transform(worldEndPos, viewProjectionMatrix);
-
-		// クリップ座標系からスクリーン座標系に変換
-		Vector3 screenStartPos = Transform(clipStartPos, viewportMatrix);
-		Vector3 screenEndPos = Transform(clipEndPos, viewportMatrix);
-
-		// 真ん中の線を黒で描画
-		if (xIndex == kSubdivision / 2 && kSubdivision % 2 == 0) {
-			Novice::DrawLine(int(screenStartPos.x), int(screenStartPos.y), int(screenEndPos.x), int(screenEndPos.y), 0x000000FF); // 黒色で描画
-		}
-		else {
-			Novice::DrawLine(int(screenStartPos.x), int(screenStartPos.y), int(screenEndPos.x), int(screenEndPos.y), 0xAAAAAAFF); // グレーで描画
-		}
-	}
-
-	// 左右の線を引くためにyIndexのループも同様に処理
-	for (uint32_t yIndex = 0; yIndex <= kSubdivision; ++yIndex) {
-		// ワールド座標系上の始点と終点を求める
-		Vector3 worldStartPos = { -kGridHalfWidth, 0.0f, -kGridHalfWidth + yIndex * kGridEvery };
-		Vector3 worldEndPos = { kGridHalfWidth, 0.0f, -kGridHalfWidth + yIndex * kGridEvery };
-
-		// ビュープロジェクションマトリックスを使ってクリップ座標系に変換
-		Vector3 clipStartPos = Transform(worldStartPos, viewProjectionMatrix);
-		Vector3 clipEndPos = Transform(worldEndPos, viewProjectionMatrix);
-
-		// クリップ座標系からスクリーン座標系に変換
-		Vector3 screenStartPos = Transform(clipStartPos, viewportMatrix);
-		Vector3 screenEndPos = Transform(clipEndPos, viewportMatrix);
-
-		// 真ん中の線を黒で描画
-		if (yIndex == kSubdivision / 2 && kSubdivision % 2 == 0) {
-			Novice::DrawLine(int(screenStartPos.x), int(screenStartPos.y), int(screenEndPos.x), int(screenEndPos.y), 0x000000FF); // 黒色で描画
-		}
-		else {
-			Novice::DrawLine(int(screenStartPos.x), int(screenStartPos.y), int(screenEndPos.x), int(screenEndPos.y), 0xAAAAAAFF); // グレーで描画
-		}
-	}
-}
-
-void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMarix, uint32_t color) {
-	const uint32_t kSubdivision = 10;                          // 分割数
-	const float kLonEvery = 2.0f * float(M_PI) / kSubdivision; // 経度分割1つ分の角度
-	const float kLatEvery = float(M_PI) / kSubdivision;        // 緯度分割1つ分の角度
-
-	// 緯度の方向に分割　-π/2 ～ π/2
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex; // 現在の緯度
-
-		// 経度の方向に分割 0 ～ 2π
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			float lon = lonIndex * kLonEvery; // 現在の経度
-
-			// 現在の点を求める
-			float x1 = sphere.center.x + sphere.radius * std::cosf(lat) * std::cosf(lon);
-			float y1 = sphere.center.y + sphere.radius * std::sinf(lat);
-			float z1 = sphere.center.z + sphere.radius * std::cosf(lat) * std::sinf(lon);
-
-			// 次の点を求める（経度方向）
-			float x2 = sphere.center.x + sphere.radius * std::cosf(lat) * std::cosf(lon + kLonEvery);
-			float y2 = sphere.center.y + sphere.radius * std::sinf(lat);
-			float z2 = sphere.center.z + sphere.radius * std::cosf(lat) * std::sinf(lon + kLonEvery);
-
-			// 次の点を求める（緯度方向）
-			float x3 = sphere.center.x + sphere.radius * std::cosf(lat + kLatEvery) * std::cosf(lon);
-			float y3 = sphere.center.y + sphere.radius * std::sinf(lat + kLatEvery);
-			float z3 = sphere.center.z + sphere.radius * std::cosf(lat + kLatEvery) * std::sinf(lon);
-
-			// 3D座標をVector3にセット
-			Vector3 start(x1, y1, z1);
-			Vector3 end1(x2, y2, z2);
-			Vector3 end2(x3, y3, z3);
-
-			// 座標変換を行う
-			start = Transform(start, viewProjectionMatrix);
-			start = Transform(start, viewportMarix);
-			end1 = Transform(end1, viewProjectionMatrix);
-			end1 = Transform(end1, viewportMarix);
-			end2 = Transform(end2, viewProjectionMatrix);
-			end2 = Transform(end2, viewportMarix);
-
-			// 線を描画
-			Novice::DrawLine(int(start.x), int(start.y), int(end1.x), int(end1.y), color);
-			Novice::DrawLine(int(start.x), int(start.y), int(end2.x), int(end2.y), color);
-		}
-	}
-}
