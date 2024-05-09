@@ -9,6 +9,7 @@ int kWindowHeight = 720;
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+	/*
 	Vector3 v1{ 1.2f,-3.9f,2.5f };
 	Vector3 v2{ 2.8f,0.4f,-1.3f };
 	Vector3 cross = Cross(v1, v2);
@@ -20,6 +21,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{ 1.0f,-1.0f,0.0f } ,
 	{ -1.0f,-1.0f,0.0f } 
 	};
+	*/
 	// ライブラリの初期化
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
@@ -47,7 +49,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		
+		/*
 		if (keys[DIK_W]) {
 			translate.z+=0.03f;
 		}
@@ -61,7 +63,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			translate.x+= 0.03f;
 		}
 		rotate.y+=0.03f;
-
+		*/
+		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, Add(cameraPosition, cameraTranslate));
+		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
+		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+		// ViewportMatrixを作る
+		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
+		/*
 		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -77,6 +86,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Vector3 cross2 = Subtract(screenVertices[2], screenVertices[1]);
 		Vector3 cross3= Cross(cross1,cross2);
 		float dot = Dot(cameraPosition, cross3);
+		*/
 		
 		///
 		/// ↑更新処理ここまで
