@@ -38,16 +38,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		
 		if (keys[DIK_W]) {
-			translate.z++;
+			translate.z+=0.03f;
 		}
 		if (keys[DIK_S]) {
-			translate.z--;
+			translate.z-= 0.03f;
 		}
 		if (keys[DIK_A]) {
-			translate.x--;
+			translate.x-= 0.03f;
 		}
 		if (keys[DIK_D]) {
-			translate.x++;
+			translate.x+= 0.03f;
 		}
 		rotate.y+=0.03f;
 
@@ -83,6 +83,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				int(screenVertices[2].x), int(screenVertices[2].y), RED, kFillModeSolid
 			);
 		}
+		
 		///
 		/// ↑描画処理ここまで
 		///

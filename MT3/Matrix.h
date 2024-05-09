@@ -421,3 +421,26 @@ float Dot(const Vector3& v1,const Vector3& v2 ) {
 	result = (v1.x * v2.x) + (v1.y * v2.y)+ (v1.z * v2.z);
 	return result;
 }
+
+void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
+	const float kGridHalfWidth = 2.0f;
+	const uint32_t kSubdivision = 10;
+	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);
+	
+	// 奥から手前の線を順々に引いていく
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
+		// 上の情報を使ってワールド座標系上の始点と終点を求める
+		Vector3 startLine{ -kGridHalfWidth + xIndex * kGridEvery,0.0f,-kGridHalfWidth };
+		Vector3 end{ -kGridHalfWidth + xIndex * kGridEvery,0.0f,kGridHalfWidth };
+	}
+		// スクリーン座標系まで変換してをかける
+		
+		// 変換した座標を使って表示。色は薄い灰色(0xAAAAAAFF)、原点は黒ぐらいがいいが、何でもいい
+		Novice::DrawLine();
+	}
+	// 左からも同じように順々に引いていく
+	for (uint32_t zIndex = 0; zIndex <= kSubdivision; zIndex) {
+		// 奥から手前が左右に代わるだけ
+
+	}
+}
