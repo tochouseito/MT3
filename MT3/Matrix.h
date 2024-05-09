@@ -6,6 +6,27 @@
 #include<cmath>
 #include <math.h>
 #define N 4 //逆行列を求める行列の行数・列数 
+// 行列の加法
+Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result = { 0 };
+	for (int i = 0; i < N; ++i) {
+		for (int j = 0; j < N; ++j) {
+			result.m[i][j] = m1.m[i][j] + m2.m[i][j];
+		}
+	}
+	return result;
+
+}
+// 行列の減法
+Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result = { 0 };
+	for (int i = 0; i < N; ++i) {
+		for (int j = 0; j < N; ++j) {
+			result.m[i][j] = m1.m[i][j] - m2.m[i][j];
+		}
+	}
+	return result;
+}
 int check(double mat[N][N], double inv[N][N]) {
 
 	double inner_product;
