@@ -421,7 +421,10 @@ float Dot(const Vector3& v1,const Vector3& v2 ) {
 	result = (v1.x * v2.x) + (v1.y * v2.y)+ (v1.z * v2.z);
 	return result;
 }
-
+struct Sphere {
+	Vector3 center; // !< 中心点
+	float radius;   // !< 半径
+};
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;                                      // グリッドの半分の幅
 	const uint32_t kSubdivision = 10;                                       // 分割数
