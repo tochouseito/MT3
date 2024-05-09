@@ -21,8 +21,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{ -1.0f,-1.0f,0.0f } 
 	};
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, kWindowWidth, kWindowHeight);
-	
+	Novice::Initialize(kWindowTitle, 1280, 720);
+
+	Vector3 cameraTranslate{ 0.0f, 1.9f, -6.49f };
+	Vector3 cameraRotate{ 0.26f, 0.0f, 0.0f };
+	Vector3 cameraPosition{ 0.0f, 1.0f, -5.0f };
+	//const int kWindowWidth = 1280;
+	//const int kWindowHeight = 720;
+	Sphere sphere;
+	sphere.center = { 0, 0, 0 };
+	sphere.radius = 1;
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
