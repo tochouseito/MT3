@@ -6,27 +6,52 @@
 #include<cmath>
 #include <math.h>
 #define N 4 //逆行列を求める行列の行数・列数 
-// 行列の加法
-Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
-	Matrix4x4 result = { 0 };
-	for (int i = 0; i < N; ++i) {
-		for (int j = 0; j < N; ++j) {
-			result.m[i][j] = m1.m[i][j] + m2.m[i][j];
-		}
-	}
+// 加算
+Vector3 Add(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x + v2.x;
+	result.y = v1.y + v2.y;
+	result.z = v1.z + v2.z;
 	return result;
+}
+// 減算
+Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+	result.z = v1.z - v2.z;
+	return result;
+}
+// スカラー倍
+Vector3 Multiply(float scalar, const Vector3& v) {
+	Vector3 result;
+	result.x = v.x * scalar;
+	result.y = v.y * scalar;
+	result.z = v.z * scalar;
+	return result;
+}
+// 内積
+float Dot(const Vector3& v1, const Vector3& v2) {
+	float result;
+	result = (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+	return result;
+}
+// 長さ（ノルム）
+float Length(const Vector3& v) {
+	float result;
+	result = float(sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	return result;
+}
+// 正規化
+Vector3 Normalize(const Vector3& v) {
+	Vector3 result;
+	result.x = float(v.x / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	result.y = float(v.y / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	result.z = float(v.z / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
 
-}
-// 行列の減法
-Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
-	Matrix4x4 result = { 0 };
-	for (int i = 0; i < N; ++i) {
-		for (int j = 0; j < N; ++j) {
-			result.m[i][j] = m1.m[i][j] - m2.m[i][j];
-		}
-	}
 	return result;
 }
+
 int check(double mat[N][N], double inv[N][N]) {
 
 	double inner_product;
@@ -70,6 +95,7 @@ Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
 	}
 	return result;
 }
+/*
 Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
 	result.x = v1.x - v2.x;
@@ -77,6 +103,7 @@ Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 	result.z = v1.z - v2.z;
 	return result;
 }
+*/
 // 転置行列
 Matrix4x4 Transpose(const Matrix4x4& m) {
 	Matrix4x4 result = { 0 };
@@ -437,12 +464,13 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	result.z = (v1.x * v2.y) - (v1.y * v2.x);
 	return result;
 }
+/*
 float Dot(const Vector3& v1,const Vector3& v2 ) {
 	float result;
 	result = (v1.x * v2.x) + (v1.y * v2.y)+ (v1.z * v2.z);
 	return result;
 }
-
+/*
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;
 	const uint32_t kSubdivision = 10;
@@ -465,3 +493,4 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 
 	}
 }
+*/
