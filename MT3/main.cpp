@@ -10,6 +10,18 @@ struct Sphere {
 	Vector3 center; // !< 中心点
 	float radius;   // !< 半径
 };
+struct Line {
+	Vector3 origin; // !<始点
+	Vector3 diff;   // !<終点への差分ベクトル
+};
+struct Ray {
+	Vector3 origin; // !<始点
+	Vector3 diff;   // !<終点への差分ベクトル
+};
+struct Segment {
+	Vector3 origin; // !<始点
+	Vector3 diff;   // !<終点への差分ベクトル
+};
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;                                      // グリッドの半分の幅
 	const uint32_t kSubdivision = 10;                                       // 分割数
@@ -62,6 +74,21 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 	}
 }
 
+//3次元ベクトル a をベクトル b に正射影する関数
+Vector3 Project(const Vector3& v1, const Vector3& v2) {
+	float dot = Dot(v1, v2);
+	float magSquared = MagnitudeSquared(v2);
+	float scalar = dot / magSquared;
+	return { v2.x * scalar, v2.y * scalar, v2.z * scalar };
+}
+//最近接点を計算する関数
+Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
+	Vector3 pointOnLine = segment.origin; // 直線上の任意の点はセグメントの始点と同じと仮定
+	float dot = Dot(segment.diff, Subtract(point, pointOnLine));
+	float magSquared = MagnitudeSquared(segment.diff);
+	float t = dot / magSquared;
+	return { pointOnLine.x + segment.diff.x * t, pointOnLine.y + segment.diff.y * t, pointOnLine.z + segment.diff.z * t };
+}
 void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMarix, uint32_t color) {
 	const uint32_t kSubdivision = 10;                          // 分割数
 	const float kLonEvery = 2.0f * float(M_PI) / kSubdivision; // 経度分割1つ分の角度
@@ -111,19 +138,7 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 }
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	/*
-	Vector3 v1{ 1.2f,-3.9f,2.5f };
-	Vector3 v2{ 2.8f,0.4f,-1.3f };
-	Vector3 cross = Cross(v1, v2);
-	Vector3 rotate{  };
-	Vector3 translate{ };
-	Vector3 cameraPosition{ 0.0f,0.0f,-10.0f };
-	Vector3 kLocalVertices[3] = {
-	{ 0.0f,1.0f,0.0f } ,
-	{ 1.0f,-1.0f,0.0f } ,
-	{ -1.0f,-1.0f,0.0f } 
-	};
-	*/
+	
 	// ライブラリの初期化
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
@@ -135,6 +150,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sphere sphere;
 	sphere.center = { 0, 0, 0 };
 	sphere.radius = 1;
+	
+	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
+	Vector3 point{ -1.5f,0.6f,0.6f };
+	Sphere pointSphere{ point,0.01f };
+	
+	Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
+	Vector3 closestPoint = ClosestPoint(point, segment);
+	Sphere closestPointSphere{ closestPoint,0.01f };
+
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
@@ -151,71 +175,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		/*
-		if (keys[DIK_W]) {
-			translate.z+=0.03f;
-		}
-		if (keys[DIK_S]) {
-			translate.z-= 0.03f;
-		}
-		if (keys[DIK_A]) {
-			translate.x-= 0.03f;
-		}
-		if (keys[DIK_D]) {
-			translate.x+= 0.03f;
-		}
-		rotate.y+=0.03f;
-		*/
+		
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, Add(cameraPosition, cameraTranslate));
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
-		// ViewportMatrixを作る
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-		/*
-		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
-		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
-		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-		Vector3 screenVertices[3];
-		for (uint32_t i = 0; i < 3; ++i) {
-			Vector3 ndcVertex = Transform(kLocalVertices[i], worldViewProjectionMatrix);
-			screenVertices[i] = Transform(ndcVertex, viewportMatrix);
-		}
-		Vector3 cross1 = Subtract(screenVertices[1], screenVertices[0]);
-		Vector3 cross2 = Subtract(screenVertices[2], screenVertices[1]);
-		Vector3 cross3= Cross(cross1,cross2);
-		float dot = Dot(cameraPosition, cross3);
-		*/
+		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
+
+		
 		
 		///
 		/// ↑更新処理ここまで
 		///
-
+		
 		///
 		/// ↓描画処理ここから
 		///
-		/*
-		VectorScreenPrintf(0, 0, cross);
-		if (dot < 0) {
-
-
-			Novice::DrawTriangle(
-				int(screenVertices[0].x), int(screenVertices[0].y), int(screenVertices[1].x), int(screenVertices[1].y),
-				int(screenVertices[2].x), int(screenVertices[2].y), RED, kFillModeSolid
-			);
-		}
-		*/
+		
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
-		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+		//ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
+		//ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::End();
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
-		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, BLACK);
+		//DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, BLACK);
+		DrawSphere(pointSphere, ViewProjectionMatrix, viewportMatrix, RED);
+		DrawSphere(closestPointSphere, ViewProjectionMatrix, viewportMatrix, BLACK);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
 		///
 		/// ↑描画処理ここまで
 		///

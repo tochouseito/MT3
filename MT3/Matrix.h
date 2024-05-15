@@ -8,6 +8,7 @@
 #define N 4 //逆行列を求める行列の行数・列数 
 #include <math.h>
 #define _USE_MATH_DEFINES
+
 // 加算
 Vector3 Add(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
@@ -52,6 +53,17 @@ Vector3 Normalize(const Vector3& v) {
 	result.z = float(v.z / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
 
 	return result;
+}
+// ベクトルの大きさの2乗を計算する関数
+float MagnitudeSquared(const Vector3& v) {
+	return v.x * v.x + v.y * v.y + v.z * v.z;
+}
+// ベクトル間の距離を計算する関数
+float Distance(const Vector3& a, const Vector3& b) {
+	float dx = b.x - a.x;
+	float dy = b.y - a.y;
+	float dz = b.z - a.z;
+	return std::sqrt(dx * dx + dy * dy + dz * dz);
 }
 int check(double mat[N][N], double inv[N][N]) {
 
