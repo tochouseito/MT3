@@ -1,3 +1,4 @@
+
 #include <Novice.h>
 #include"Matrix.h"
 #include <math.h>
@@ -136,6 +137,16 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 		}
 	}
 }
+bool IsCollision(const Sphere& s1, const Sphere& s2) {
+	// 2つの円の中心間の距離を計算
+	float distance = float(std::sqrt(std::pow(s2.center.x - s1.center.x, 2) + std::pow(s2.center.y - s1.center.y, 2) + std::pow(s2.center.z - s1.center.z, 2)));
+	// 中心間の距離が2つの円の半径の合計よりも小さい場合、衝突しているとみなす
+	if (distance <= (s1.radius + s2.radius)) {
+		return true;
+	} else {
+		return false;
+	}
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
@@ -150,7 +161,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sphere sphere;
 	sphere.center = { 0, 0, 0 };
 	sphere.radius = 1;
-	
+	Sphere sphere2;
+	sphere2.center = { 0, 0, 1 };
+	sphere2.radius = 0.5f;
+	int sphere2color = 0;
+	int mouseX = 0, mouseY = 0;
 	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 	Vector3 point{ -1.5f,0.6f,0.6f };
 	Sphere pointSphere{ point,0.01f };
@@ -176,6 +191,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
+
+		/*
+		if (Novice::IsTriggerMouse(0)) {
+			Novice::GetMousePosition(&mouseX, &mouseY);
+		}
+		if (Novice::IsPressMouse(0)) {
+			static int lastMouseX, lastMouseY;
+			Novice::GetMousePosition(&lastMouseX, &lastMouseY);
+			int dx = mouseX - lastMouseX;
+			int dy = mouseY - lastMouseY;
+			lastMouseX = mouseX;
+			lastMouseY = mouseY;
+			cameraRotate.y += float(dx*0.001f);
+			cameraRotate.x += float(dy * 0.001f);
+			mouseX = lastMouseX;
+			mouseY = lastMouseY;
+			Novice::GetMousePosition(&mouseX, &mouseY);
+		}
+		*/
+
+		cameraPosition.z+= Novice::GetWheel()/100;
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, Add(cameraPosition, cameraTranslate));
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
@@ -183,8 +219,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
-
-		
+		if (IsCollision(sphere, sphere2)) {
+			sphere2color = RED;
+		} else {
+			sphere2color = BLACK;
+		}
 		
 		///
 		/// ↑更新処理ここまで
@@ -197,15 +236,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		//ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
-		//ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
+		ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
+		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+		ImGui::DragFloat3("Sphere2Center", &sphere2.center.x, 0.01f);
+		ImGui::DragFloat("Sphere2Radius", &sphere2.radius, 0.01f);
 		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::End();
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
-		//DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, BLACK);
-		DrawSphere(pointSphere, ViewProjectionMatrix, viewportMatrix, RED);
-		DrawSphere(closestPointSphere, ViewProjectionMatrix, viewportMatrix, BLACK);
-		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, BLACK);
+		DrawSphere(sphere2, ViewProjectionMatrix, viewportMatrix, sphere2color);
+		//DrawSphere(pointSphere, ViewProjectionMatrix, viewportMatrix, RED);
+		//DrawSphere(closestPointSphere, ViewProjectionMatrix, viewportMatrix, BLACK);
+		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
 		///
 		/// ↑描画処理ここまで
 		///
