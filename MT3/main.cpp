@@ -23,6 +23,10 @@ struct Segment {
 	Vector3 origin; // !<始点
 	Vector3 diff;   // !<終点への差分ベクトル
 };
+struct Plane {
+	Vector3 normal; //!< 法線
+	float distance; //!< 距離
+};
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;                                      // グリッドの半分の幅
 	const uint32_t kSubdivision = 10;                                       // 分割数
@@ -147,6 +151,43 @@ bool IsCollision(const Sphere& s1, const Sphere& s2) {
 		return false;
 	}
 }
+bool IsCollision(const Sphere& sphere, const Plane& plane) {
+	// 2つの円と平面の中心間の距離を計算
+	float distance = std::abs((Dot(plane.normal, sphere.center))-plane.distance);
+	//float distance = float(std::sqrt(std::pow(plane.normal.x - sphere.center.x, 2) + std::pow(plane.normal.y - sphere.center.y, 2) + std::pow(plane.normal.z - sphere.center.z, 2)));
+	// 中心間の距離が2つの円の半径の合計よりも小さい場合、衝突しているとみなす
+	if (distance <= sphere.radius) {
+		return true;
+	} else {
+		return false;
+	}
+}
+Vector3 Perpendicular(const Vector3& vector) {
+	if (vector.x != 0.0f || vector.y != 0.0f) {
+		return{ -vector.y,vector.x,0.0f };
+	}
+	return{ 0.0f,-vector.z,vector.y };
+}
+void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 center = Multiply(plane.distance, plane.normal);//1
+	Vector3 perpendiculars[4];
+	perpendiculars[0] = Normalize(Perpendicular(plane.normal));//2
+	perpendiculars[1] = { -perpendiculars[0].x,-perpendiculars[0].y,-perpendiculars[0].z };//3
+	perpendiculars[2] = Cross(plane.normal, perpendiculars[0]);//4
+	perpendiculars[3] = { -perpendiculars[2].x ,- perpendiculars[2].y,-perpendiculars[2].z };//5
+	//6
+	Vector3 points[4];
+	for (int32_t index = 0; index < 4; ++index) {
+		Vector3 extend = Multiply(2.0f, perpendiculars[index]);
+		Vector3 point = Add(center, extend);
+		points[index] = Transform(Transform(point, viewProjectionMatrix), viewportMatrix);
+	}
+	// pointsをそれぞれ結んでDrawLineで矩形を描画する。DrawTriangleを使って塗りつぶしてもいいが、DepthがないのでMT3ではわかりづらい
+	Novice::DrawLine(int(points[0].x), int(points[0].y), int(points[2].x), int(points[2].y), color);
+	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[2].x), int(points[2].y), color);
+	Novice::DrawLine(int(points[0].x), int(points[0].y), int(points[3].x), int(points[3].y), color);
+	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[3].x), int(points[3].y), color);
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
@@ -161,11 +202,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sphere sphere;
 	sphere.center = { 0, 0, 0 };
 	sphere.radius = 1;
-	Sphere sphere2;
-	sphere2.center = { 0, 0, 1 };
-	sphere2.radius = 0.5f;
-	int sphere2color = 0;
-	int mouseX = 0, mouseY = 0;
+	Plane plane;
+	plane.normal={ 0.0f,1.0f,0.0f };
+	plane.distance = 1.0f;
+	int planeColor = 0;
+	
 	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 	Vector3 point{ -1.5f,0.6f,0.6f };
 	Sphere pointSphere{ point,0.01f };
@@ -193,6 +234,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 
 		/*
+		int mouseX = 0, mouseY = 0;
 		if (Novice::IsTriggerMouse(0)) {
 			Novice::GetMousePosition(&mouseX, &mouseY);
 		}
@@ -219,10 +261,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
-		if (IsCollision(sphere, sphere2)) {
-			sphere2color = RED;
-		} else {
-			sphere2color = BLACK;
+		if (IsCollision(sphere, plane) == true) {
+			planeColor = RED;
+		} else
+		{
+			planeColor = WHITE;
 		}
 		
 		///
@@ -239,13 +282,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
 		ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
 		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
-		ImGui::DragFloat3("Sphere2Center", &sphere2.center.x, 0.01f);
-		ImGui::DragFloat("Sphere2Radius", &sphere2.radius, 0.01f);
+		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
+		ImGui::DragFloat("PlaneDistance", &plane.distance, 0.01f);
+		plane.normal = Normalize(plane.normal);
 		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::End();
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
-		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, BLACK);
-		DrawSphere(sphere2, ViewProjectionMatrix, viewportMatrix, sphere2color);
+		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, planeColor);
+		DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, WHITE);
 		//DrawSphere(pointSphere, ViewProjectionMatrix, viewportMatrix, RED);
 		//DrawSphere(closestPointSphere, ViewProjectionMatrix, viewportMatrix, BLACK);
 		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
