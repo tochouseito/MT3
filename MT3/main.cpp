@@ -27,6 +27,7 @@ struct Plane {
 	Vector3 normal; //!< 法線
 	float distance; //!< 距離
 };
+
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;                                      // グリッドの半分の幅
 	const uint32_t kSubdivision = 10;                                       // 分割数
@@ -162,6 +163,23 @@ bool IsCollision(const Sphere& sphere, const Plane& plane) {
 		return false;
 	}
 }
+bool IsCollision(const Segment& segment, const Plane& plane) {
+	// まず垂直判定を行うために、法線と線の内積を求める
+	float dot = Dot(plane.normal, segment.diff);
+	// 垂直＝平行であるので、衝突しているはずがない
+	if (dot == 0.0f) {
+		return false;
+	}
+	// ｔを求める
+	float t = (plane.distance - Dot(segment.origin, plane.normal)) / dot;
+
+	// 
+	if (t == -1) {
+		return true;
+	} else {
+		return false;
+	}
+}
 Vector3 Perpendicular(const Vector3& vector) {
 	if (vector.x != 0.0f || vector.y != 0.0f) {
 		return{ -vector.y,vector.x,0.0f };
@@ -199,9 +217,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraPosition{ 0.0f, 1.0f, -5.0f };
 	//const int kWindowWidth = 1280;
 	//const int kWindowHeight = 720;
-	Sphere sphere;
+	/*Sphere sphere;
 	sphere.center = { 0, 0, 0 };
-	sphere.radius = 1;
+	sphere.radius = 1;*/
 	Plane plane;
 	plane.normal={ 0.0f,1.0f,0.0f };
 	plane.distance = 1.0f;
@@ -209,7 +227,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 	Vector3 point{ -1.5f,0.6f,0.6f };
-	Sphere pointSphere{ point,0.01f };
+	/*Sphere pointSphere{ point,0.01f };*/
 	
 	Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
 	Vector3 closestPoint = ClosestPoint(point, segment);
@@ -261,13 +279,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
-		if (IsCollision(sphere, plane) == true) {
+		/*if (IsCollision(sphere, plane) == true) {
 			planeColor = RED;
 		} else
 		{
 			planeColor = WHITE;
-		}
-		
+		}*/
+		planeColor = WHITE;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -280,15 +298,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
-		ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
-		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+		/*ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
+		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);*/
 		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
 		ImGui::DragFloat("PlaneDistance", &plane.distance, 0.01f);
 		plane.normal = Normalize(plane.normal);
 		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::End();
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
-		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, planeColor);
+		/*DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, planeColor);*/
 		DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, WHITE);
 		//DrawSphere(pointSphere, ViewProjectionMatrix, viewportMatrix, RED);
 		//DrawSphere(closestPointSphere, ViewProjectionMatrix, viewportMatrix, BLACK);
