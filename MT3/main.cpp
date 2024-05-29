@@ -174,7 +174,8 @@ bool IsCollision(const Segment& segment, const Plane& plane) {
 	float t = (plane.distance - Dot(segment.origin, plane.normal)) / dot;
 
 	// 
-	if (t == -1) {
+	//float distance = Dot(segment.origin + (segment.diff * t), plane.normal);
+	if (t>=0.0f&&t<=1.0f) {
 		return true;
 	} else {
 		return false;
@@ -228,7 +229,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 	Vector3 point{ -1.5f,0.6f,0.6f };
 	/*Sphere pointSphere{ point,0.01f };*/
-	
+	Segment segment2{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 	Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
 	Vector3 closestPoint = ClosestPoint(point, segment);
 	Sphere closestPointSphere{ closestPoint,0.01f };
@@ -279,13 +280,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
-		/*if (IsCollision(sphere, plane) == true) {
+		Vector3 start2 = Transform(Transform(segment2.origin, ViewProjectionMatrix), viewportMatrix);
+		Vector3 end2 = Transform(Transform(Add(segment2.origin, segment2.diff), ViewProjectionMatrix), viewportMatrix);
+		if (IsCollision(segment2,plane) == true) {
 			planeColor = RED;
 		} else
 		{
 			planeColor = WHITE;
-		}*/
-		planeColor = WHITE;
+		}
 		///
 		/// ↑更新処理ここまで
 		///
@@ -307,10 +309,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::End();
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		/*DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, planeColor);*/
-		DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, WHITE);
+		DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, planeColor);
 		//DrawSphere(pointSphere, ViewProjectionMatrix, viewportMatrix, RED);
 		//DrawSphere(closestPointSphere, ViewProjectionMatrix, viewportMatrix, BLACK);
-		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+		Novice::DrawLine(int(start2.x), int(start2.y), int(end2.x), int(end2.y), WHITE);
 		///
 		/// ↑描画処理ここまで
 		///
