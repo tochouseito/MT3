@@ -27,7 +27,10 @@ struct Plane {
 	Vector3 normal; //!< 法線
 	float distance; //!< 距離
 };
-
+struct Triangle
+{
+	Vector3 vertices[3];//!< 頂点
+};
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;                                      // グリッドの半分の幅
 	const uint32_t kSubdivision = 10;                                       // 分割数
@@ -181,6 +184,92 @@ bool IsCollision(const Segment& segment, const Plane& plane) {
 		return false;
 	}
 }
+//bool IsCollision(const Triangle& triangle, const Segment& segment) {
+//	Plane plane=MakePlane(triangle);
+//	if (!IsCollision(segment, plane)) {
+//		return false;
+//	}
+//	Vector3 v1 = Subtract(triangle.vertices[1], triangle.vertices[0]);
+//	Vector3 v2 = Subtract(triangle.vertices[2], triangle.vertices[1]);
+//	Vector3 v3 = Subtract(triangle.vertices[0], triangle.vertices[2]);
+//	// まず垂直判定を行うために、法線と線の内積を求める
+//	float dot = Dot(plane.normal, segment.diff);
+//	// 垂直＝平行であるので、衝突しているはずがない
+//	if (dot == 0.0f) {
+//		return false;
+//	}
+//	// ｔを求める
+//	float t = (plane.distance - Dot(segment.origin, plane.normal)) / dot;
+//
+//	// 
+//	float distance = Dot(segment.origin + (segment.diff * t), plane.normal);
+//	if (t >= 0.0f && t <= 1.0f) {
+//		return true;
+//	} else {
+//		return false;
+//	}
+//}
+Plane CalculatePlane(Triangle triangle)
+{
+	Vector3 v1 = triangle.vertices[0];
+	Vector3 v2 = triangle.vertices[1];
+	Vector3 v3 = triangle.vertices[2];
+
+	Vector3 edge1 = v2 - v1;
+	Vector3 edge2 = v3 - v1;
+	Vector3 normal = Normalize(Cross(edge1, edge2));
+
+	float distance = Dot(normal, v1);
+
+	return Plane{ normal = normal, distance = distance };
+}
+Vector3 CalculateIntersection(Segment segment, Plane plane)
+{
+	Vector3 p0 = segment.origin;
+	Vector3 p1 = segment.origin + segment.diff;
+	Vector3 lineDir = Normalize((p1 - p0));
+
+	float t = (plane.distance - Dot(plane.normal, p0)) / Dot(plane.normal, lineDir);
+
+	return p0 + lineDir * t;
+}
+Vector3 CalculateVector(Vector3 vertex, Vector3 intersectionPoint)
+{
+	return intersectionPoint - vertex;
+}
+bool IsCollision(const Triangle& triangle, const Segment& segment) {
+	Plane plane = CalculatePlane(triangle);
+	if (!IsCollision(segment, plane)) {
+		return false;
+	}
+	Vector3 v01 = Subtract(triangle.vertices[1], triangle.vertices[0]);
+	Vector3 v12 = Subtract(triangle.vertices[2], triangle.vertices[1]);
+	Vector3 v20 = Subtract(triangle.vertices[0], triangle.vertices[2]);
+	Vector3 p = CalculateIntersection(segment, plane);
+	Vector3 cross01 = Cross(v01,CalculateVector(triangle.vertices[0], p));
+	Vector3 cross12 = Cross(v12,CalculateVector(triangle.vertices[1], p));
+	Vector3 cross20 = Cross(v20,CalculateVector(triangle.vertices[2], p));
+	// すべての小三角形のクロス積と法線が同じ方向を向いていたら衝突
+	if (Dot(cross01, plane.normal) >= 0.0f &&
+		Dot(cross12, plane.normal) >= 0.0f &&
+		Dot(cross20, plane.normal) >= 0.0f) {
+		return true;
+	} else
+	{
+		return false;
+	}
+}
+
+//Plane MakePlane(const Triangle& triangle) {
+//	Plane result;
+//	// 各辺を結んだベクトルと、頂点と衝突点を結んだベクトルのクロス積を取る
+//	Vector3 cross01 = Cross(triangle.vertices[1] - triangle.vertices[0],
+//		triangle.vertices[2] - triangle.vertices[1]);
+//	cross01 = Normalize(cross01);
+//	//float distance = std::abs((Dot(cross01, sphere.center)) - plane.distance);
+//	result.normal = cross01;
+//	return result;
+//}
 Vector3 Perpendicular(const Vector3& vector) {
 	if (vector.x != 0.0f || vector.y != 0.0f) {
 		return{ -vector.y,vector.x,0.0f };
@@ -206,6 +295,16 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[2].x), int(points[2].y), color);
 	Novice::DrawLine(int(points[0].x), int(points[0].y), int(points[3].x), int(points[3].y), color);
 	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[3].x), int(points[3].y), color);
+}
+void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 points[3];
+	for (int i = 0; i < 3; ++i) {
+		points[i] = triangle.vertices[i];
+		points[i]= Transform(Transform(points[i], viewProjectionMatrix), viewportMatrix);
+	}
+	Novice::DrawTriangle(static_cast<int>(points[0].x), static_cast<int>(points[0].y), static_cast<int>(points[1].x),
+		static_cast<int>(points[1].y), static_cast<int>(points[2].x), static_cast<int>(points[2].y), color,
+			kFillModeWireFrame);
 }
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -233,7 +332,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
 	Vector3 closestPoint = ClosestPoint(point, segment);
 	Sphere closestPointSphere{ closestPoint,0.01f };
-
+	Triangle triangle;
+	triangle.vertices[0] = { -1.0f,0.0f,0.0f };
+	triangle.vertices[1] = { 0.0f,1.0f,0.0f };
+	triangle.vertices[2] = { 1.0f,0.0f,0.0f };
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
@@ -282,7 +384,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
 		Vector3 start2 = Transform(Transform(segment2.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end2 = Transform(Transform(Add(segment2.origin, segment2.diff), ViewProjectionMatrix), viewportMatrix);
-		if (IsCollision(segment2,plane) == true) {
+		if (IsCollision(triangle,segment2) == true) {
 			planeColor = RED;
 		} else
 		{
@@ -302,17 +404,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
 		/*ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
 		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);*/
-		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
-		ImGui::DragFloat("PlaneDistance", &plane.distance, 0.01f);
+		/*ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
+		ImGui::DragFloat("PlaneDistance", &plane.distance, 0.01f);*/
+		ImGui::DragFloat3("Triangle[0]", &triangle.vertices[0].x, 0.01f);
 		plane.normal = Normalize(plane.normal);
 		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::End();
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		/*DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, planeColor);*/
-		DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, planeColor);
+		//DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, planeColor);
 		//DrawSphere(pointSphere, ViewProjectionMatrix, viewportMatrix, RED);
 		//DrawSphere(closestPointSphere, ViewProjectionMatrix, viewportMatrix, BLACK);
 		Novice::DrawLine(int(start2.x), int(start2.y), int(end2.x), int(end2.y), WHITE);
+		DrawTriangle(triangle, ViewProjectionMatrix, viewportMatrix, planeColor);
 		///
 		/// ↑描画処理ここまで
 		///
