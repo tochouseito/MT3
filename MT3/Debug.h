@@ -61,7 +61,7 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 	}
 }
 void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMarix, uint32_t color) {
-	const uint32_t kSubdivision = 10;                          // 分割数
+	const uint32_t kSubdivision = 32;                          // 分割数
 	const float kLonEvery = 2.0f * float(M_PI) / kSubdivision; // 経度分割1つ分の角度
 	const float kLatEvery = float(M_PI) / kSubdivision;        // 緯度分割1つ分の角度
 
