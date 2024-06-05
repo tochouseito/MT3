@@ -1,7 +1,16 @@
 #pragma once
 #include "imgui.h"
 #include"Matrix.h"
-
+enum Vertexs {
+	frontLeftBottom,
+	frontLeftTop,
+	frontRightBottom,
+	frontRightTop,
+	backLeftBottom,
+	backLeftTop,
+	backRightBottom,
+	backRightTop,
+};
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;                                      // グリッドの半分の幅
 	const uint32_t kSubdivision = 10;                                       // 分割数
@@ -216,4 +225,39 @@ void CameraMove(Vector3& cameraRotate, Vector3& cameraTranslate, Vector2Int& cli
 	ImGui::Begin("camera explanation");
 	ImGui::Text("DebugCamera = %d (0 = false , 1 = true)\nPressingMouseLeftbutton : moveCameraRotate\nPressingMouseWheelbutton : moveCameraTranslate", isDebugCamera);
 	ImGui::End();
+}
+void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 center = { aabb.max.x / 2.0f,aabb.max.y / 2.0f,aabb.max.z / 2.0f };
+	Vector3 perpendiculars[8];
+
+	perpendiculars[frontLeftBottom] = aabb.min;
+	perpendiculars[frontLeftTop] = { aabb.min.x,aabb.max.y,aabb.min.z };
+	perpendiculars[frontRightBottom] = { aabb.max.x,aabb.min.y,aabb.min.z };
+	perpendiculars[frontRightTop] = { aabb.max.x,aabb.max.y,aabb.min.z };
+	perpendiculars[backLeftBottom] = { aabb.min.x,aabb.min.y,aabb.max.z };
+	perpendiculars[backLeftTop] = { aabb.min.x,aabb.max.y,aabb.max.z };
+	perpendiculars[backRightBottom] = { aabb.max.x,aabb.min.y,aabb.max.z };
+	perpendiculars[backRightTop] = aabb.max;
+	Vector3 points[8];
+	for (int32_t index = 0; index < 8; ++index) {
+		Vector3 extend = Multiply(2.0f, perpendiculars[index]);
+		Vector3 point = Add(center, extend);
+		points[index] = Transform(Transform(point, viewProjectionMatrix), viewportMatrix);
+	}
+	for (int i = 0; i < 2; ++i) {
+		Novice::DrawLine(static_cast<int>(points[frontLeftBottom+i].x), static_cast<int>(points[frontLeftBottom+i].y),
+			static_cast<int>(points[frontRightBottom+i].x), static_cast<int>(points[frontRightBottom+i].y),color);
+	}
+	for (int i = 0; i < 2; ++i) {
+		Novice::DrawLine(static_cast<int>(points[backLeftBottom + i].x), static_cast<int>(points[backLeftBottom + i].y),
+			static_cast<int>(points[backRightBottom + i].x), static_cast<int>(points[backRightBottom + i].y), color);
+	}
+	for (int i = 0; i < 4; ++i) {
+		Novice::DrawLine(static_cast<int>(points[frontLeftBottom + i].x), static_cast<int>(points[frontLeftBottom + i].y),
+			static_cast<int>(points[backLeftBottom + i].x), static_cast<int>(points[backLeftBottom + i].y), color);
+	}
+	for (int i = 0; i < 8; i+=2) {
+		Novice::DrawLine(static_cast<int>(points[frontLeftBottom + i].x), static_cast<int>(points[frontLeftBottom + i].y),
+			static_cast<int>(points[frontLeftTop + i].x), static_cast<int>(points[frontLeftTop + i].y), color);
+	}
 }
