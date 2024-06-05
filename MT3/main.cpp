@@ -22,8 +22,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	aabb[0].max = { 0.0f,0.0f,0.0f };
 	aabb[1].min = { 0.2f,0.2f,0.2f };
 	aabb[1].max = { 1.0f,1.0f,1.0f };
-	//int planeColor = 0;
-	
+	int AABBColor = 0;
+	static bool isDebugCamera = false;
 	
 	Vector2Int mouse;
 	// キー入力結果を受け取る箱
@@ -43,8 +43,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
-		
-		CameraMove(cameraRotate, cameraTranslate, mouse, &keys[DIK_SPACE], &preKeys[DIK_SPACE]);
+		if (keys[DIK_SPACE] && preKeys[DIK_SPACE] == 0) {
+			isDebugCamera = !isDebugCamera;
+		}
+		CameraMove(cameraRotate, cameraTranslate, mouse, isDebugCamera);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, Add(cameraPosition, cameraTranslate));
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
@@ -55,12 +57,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
 		Vector3 start2 = Transform(Transform(segment2.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end2 = Transform(Transform(Add(segment2.origin, segment2.diff), ViewProjectionMatrix), viewportMatrix);*/
-		/*if (IsCollision(triangle,segment2) == true) {
-			planeColor = RED;
+		if (IsCollision(aabb[0],aabb[1])) {
+			AABBColor = RED;
 		} else
 		{
-			planeColor = WHITE;
-		}*/
+			AABBColor = WHITE;
+		}
 		///
 		/// ↑更新処理ここまで
 		///
@@ -73,9 +75,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
+		ImGui::DragFloat3("AABB1:MIN", &aabb[0].min.x, 0.01f);
+		ImGui::DragFloat3("AABB1:MAX", &aabb[0].max.x, 0.01f);
+		ImGui::DragFloat3("AABB2:MIN", &aabb[1].min.x, 0.01f);
+		ImGui::DragFloat3("AABB2:MAX", &aabb[1].max.x, 0.01f);
 		ImGui::End();
 		for (int i = 0; i < 2; ++i) {
-			DrawAABB(aabb[i], ViewProjectionMatrix, viewportMatrix, WHITE);
+			DrawAABB(aabb[i], ViewProjectionMatrix, viewportMatrix, AABBColor);
 		}
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///

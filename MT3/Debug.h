@@ -137,7 +137,7 @@ void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatri
 		static_cast<int>(points[1].y), static_cast<int>(points[2].x), static_cast<int>(points[2].y), color,
 		kFillModeWireFrame);
 }
-void CameraMove(Vector3& cameraRotate, Vector3& cameraTranslate, Vector2Int& clickPosition, char* keys, char* preKeys) {
+void CameraMove(Vector3& cameraRotate, Vector3& cameraTranslate, Vector2Int& clickPosition,  bool isDebugCamera) {
 	// カーソルを動かすときの感度
 	const float mouseSensitivity = 0.003f;
 	// カメラの移動速度
@@ -146,7 +146,7 @@ void CameraMove(Vector3& cameraRotate, Vector3& cameraTranslate, Vector2Int& cli
 	// 各フラグ
 	static bool isLeftClicked = false;
 	static bool isWheelClicked = false;
-	static bool isDebugCamera = true;
+	//static bool isDebugCamera = false;
 
 	// 回転を考慮する
 	Matrix4x4 rotationMatrix = MakeRotateXYZMatrix(cameraRotate);
@@ -158,9 +158,7 @@ void CameraMove(Vector3& cameraRotate, Vector3& cameraTranslate, Vector2Int& cli
 	Vector3 rotatedY = Transform(Y, rotationMatrix);
 	Vector3 rotatedZ = Transform(Z, rotationMatrix);
 
-	if (keys[DIK_SPACE] && preKeys[DIK_SPACE] == 0) {
-		isDebugCamera = !isDebugCamera;
-	}
+	
 
 	if (isDebugCamera) {
 
@@ -240,9 +238,7 @@ void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Mat
 	perpendiculars[backRightTop] = aabb.max;
 	Vector3 points[8];
 	for (int32_t index = 0; index < 8; ++index) {
-		Vector3 extend = Multiply(2.0f, perpendiculars[index]);
-		Vector3 point = Add(center, extend);
-		points[index] = Transform(Transform(point, viewProjectionMatrix), viewportMatrix);
+		points[index] = Transform(Transform(perpendiculars[index], viewProjectionMatrix), viewportMatrix);
 	}
 	for (int i = 0; i < 2; ++i) {
 		Novice::DrawLine(static_cast<int>(points[frontLeftBottom+i].x), static_cast<int>(points[frontLeftBottom+i].y),
