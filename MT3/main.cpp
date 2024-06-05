@@ -306,6 +306,95 @@ void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatri
 		static_cast<int>(points[1].y), static_cast<int>(points[2].x), static_cast<int>(points[2].y), color,
 			kFillModeWireFrame);
 }
+void CameraMove(Vector3& cameraRotate, Vector3& cameraTranslate, Vector2Int& clickPosition, char* keys, char* preKeys) {
+	// カーソルを動かすときの感度
+	const float mouseSensitivity = 0.003f;
+	// カメラの移動速度
+	const float moveSpeed = 0.005f;
+
+	// 各フラグ
+	static bool isLeftClicked = false;
+	static bool isWheelClicked = false;
+	static bool isDebugCamera = true;
+
+	// 回転を考慮する
+	Matrix4x4 rotationMatrix = MakeRotateXYZMatrix(cameraRotate);
+	Vector3 X = { 1.0f, 0.0f, 0.0f };
+	Vector3 Y = { 0.0f, 1.0f, 0.0f };
+	Vector3 Z = { 0.0f, 0.0f, -1.0f };
+
+	Vector3 rotatedX = Transform(X, rotationMatrix);
+	Vector3 rotatedY = Transform(Y, rotationMatrix);
+	Vector3 rotatedZ = Transform(Z, rotationMatrix);
+
+	if (keys[DIK_SPACE] && preKeys[DIK_SPACE] == 0) {
+		isDebugCamera = !isDebugCamera;
+	}
+
+	if (isDebugCamera) {
+
+		/// ========カメラ操作========
+		// カメラの回転を更新する
+		if (Novice::IsPressMouse(0) == 1) {
+			if (!isLeftClicked) {
+				// マウスがクリックされたときに現在のマウス位置を保存する
+				Novice::GetMousePosition(&clickPosition.x, &clickPosition.y);
+				isLeftClicked = true;
+			} else {
+				// マウスがクリックされている間はカメラの回転を更新する
+				Vector2Int currentMousePos;
+				Novice::GetMousePosition(&currentMousePos.x, &currentMousePos.y);
+
+				float deltaX = static_cast<float>(currentMousePos.x - clickPosition.x);
+				float deltaY = static_cast<float>(currentMousePos.y - clickPosition.y);
+
+				cameraRotate.x += deltaY * mouseSensitivity;
+				cameraRotate.y += deltaX * mouseSensitivity;
+
+				// 現在のマウス位置を保存する
+				clickPosition = currentMousePos;
+			}
+		} else {
+			// マウスがクリックされていない場合はフラグをリセットする
+			isLeftClicked = false;
+		}
+
+		// カメラの位置を更新する
+		if (Novice::IsPressMouse(2) == 1) {
+			if (!isWheelClicked) {
+				// マウスがクリックされたときに現在のマウス位置を保存する
+				Novice::GetMousePosition(&clickPosition.x, &clickPosition.y);
+				isWheelClicked = true;
+			} else {
+				// マウスがクリックされている間はカメラの位置を更新する
+				Vector2Int currentMousePos;
+				Novice::GetMousePosition(&currentMousePos.x, &currentMousePos.y);
+
+				float deltaX = static_cast<float>(currentMousePos.x - clickPosition.x);
+				float deltaY = static_cast<float>(currentMousePos.y - clickPosition.y);
+
+				cameraTranslate -= rotatedX * deltaX * mouseSensitivity;
+				cameraTranslate += rotatedY * deltaY * mouseSensitivity;
+
+				// 現在のマウス位置を保存する
+				clickPosition = currentMousePos;
+			}
+		} else {
+			// マウスがクリックされていない場合はフラグをリセットする
+			isWheelClicked = false;
+		}
+
+		// マウスホイールの移動量を取得する
+		int wheelDelta = -Novice::GetWheel();
+
+		// マウスホイールの移動量に応じてカメラの移動を更新する
+		cameraTranslate += rotatedZ * float(wheelDelta) * moveSpeed;
+		/// =====================
+	}
+	ImGui::Begin("camera explanation");
+	ImGui::Text("DebugCamera = %d (0 = false , 1 = true)\nPressingMouseLeftbutton : moveCameraRotate\nPressingMouseWheelbutton : moveCameraTranslate", isDebugCamera);
+	ImGui::End();
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
@@ -336,6 +425,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	triangle.vertices[0] = { -1.0f,0.0f,0.0f };
 	triangle.vertices[1] = { 0.0f,1.0f,0.0f };
 	triangle.vertices[2] = { 1.0f,0.0f,0.0f };
+	Vector2Int mouse;
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
@@ -353,13 +443,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
-
-		/*
-		int mouseX = 0, mouseY = 0;
-		if (Novice::IsTriggerMouse(0)) {
-			Novice::GetMousePosition(&mouseX, &mouseY);
-		}
-		if (Novice::IsPressMouse(0)) {
+		
+		
+		/*if (Novice::IsTriggerMouse(0)) {
+			Novice::GetMousePosition(&mouse.x, &mouse.y);
+		}*/
+		/*if (Novice::IsPressMouse(0)) {
 			static int lastMouseX, lastMouseY;
 			Novice::GetMousePosition(&lastMouseX, &lastMouseY);
 			int dx = mouseX - lastMouseX;
@@ -371,15 +460,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			mouseX = lastMouseX;
 			mouseY = lastMouseY;
 			Novice::GetMousePosition(&mouseX, &mouseY);
-		}
-		*/
+		}*/
+		
 
-		cameraPosition.z+= Novice::GetWheel()/100;
+		//cameraPosition.z+= Novice::GetWheel()/100;
+		CameraMove(cameraRotate, cameraTranslate, mouse, &keys[DIK_SPACE], &preKeys[DIK_SPACE]);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, Add(cameraPosition, cameraTranslate));
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
+		
 		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
 		Vector3 start2 = Transform(Transform(segment2.origin, ViewProjectionMatrix), viewportMatrix);
