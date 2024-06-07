@@ -20,13 +20,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	AABB aabb[1];
 	aabb[0].min = { -0.5f,-0.5f,-0.5f };
 	aabb[0].max = { 0.5f,0.5f,0.5f };
+	OBB obb{
+		.center{-1.0f,0.0f,0.0f},
+		.orientations = {{1.0f,0.0f,0.0f},
+		{0.0f,1.0f,0.0f},
+		{0.0f,0.0f,1.0f}},
+		.size{0.5f,0.5f,0.5f}
+	};
 	Segment segment{
 		{-0.7f,0.3f,0.0f},
 		{2.0f,-0.5f,0.0f},
 	};
+	Sphere sphere{
+		.center{0.0f,0.0f,0.0f},
+		.radius{0.5f}
+	};
 	int AABBColor = 0;
 	static bool isDebugCamera = false;
-	
+	Vector3 rotate{ 0.0f,0.0f,0.0f };
 	Vector2Int mouse;
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
@@ -54,10 +65,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-		
+		// 回転行列を生成
+		Matrix4x4 rotateMatrix = Multiply(MakeRotateXMatrix(rotate.x), Multiply(MakeRotateYMatrix(rotate.y), MakeRotateZMatrix(rotate.z)));
+
+		// 回転行列から軸を抽出
+		for (int i = 0; i < 3; ++i) {
+			obb.orientations[i].x = rotateMatrix.m[i][0];
+			obb.orientations[i].y = rotateMatrix.m[i][1];
+			obb.orientations[i].z = rotateMatrix.m[i][2];
+		}
 		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
-		if (IsCollision(aabb[0],segment)) {
+		if (IsCollision(obb,sphere)) {
 			AABBColor = RED;
 		} else
 		{
@@ -75,13 +94,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
-		ImGui::DragFloat3("AABB1:MIN", &aabb[0].min.x, 0.01f);
-		ImGui::DragFloat3("AABB1:MAX", &aabb[0].max.x, 0.01f);
+		ImGui::DragFloat3("OBB:center", &obb.center.x, 0.01f);
+		
+		ImGui::DragFloat3("OBBRotate", &rotate.x, 0.01f);
 		ImGui::End();
 		
-		DrawAABB(aabb[0], ViewProjectionMatrix, viewportMatrix, AABBColor);
-		
-		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, WHITE);
+		DrawOBB(obb, ViewProjectionMatrix, viewportMatrix, AABBColor);
+		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
 
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///
