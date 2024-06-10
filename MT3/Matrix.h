@@ -38,10 +38,10 @@ struct AABB {
 	Vector3 min; //!<最小点
 	Vector3 max; //!<最大点
 };
-struct Vector2Int {
-	int x;
-	int y;
-};
+//struct Vector2Int {
+//	int x;
+//	int y;
+//};
 struct OBB {
 	Vector3 center; //!<中心点
 	Vector3 orientations[3]; //!<座標軸、正規化，直交必須
@@ -495,8 +495,7 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
 	/* 検算 */
 	if (check(mat, inv)) {
 		//printf("invはmatの逆行列です！！\n");
-	}
-	else {
+	} else {
 		//printf("invはmatの逆行列になってません...\n");
 	}
 	return result;
