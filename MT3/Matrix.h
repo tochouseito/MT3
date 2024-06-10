@@ -38,10 +38,10 @@ struct AABB {
 	Vector3 min; //!<最小点
 	Vector3 max; //!<最大点
 };
-struct Vector2Int {
-	int x;
-	int y;
-};
+//struct Vector2Int {
+//	int x;
+//	int y;
+//};
 // 加算
 Vector3 Add(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
