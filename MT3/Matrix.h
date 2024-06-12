@@ -38,10 +38,10 @@ struct AABB {
 	Vector3 min; //!<最小点
 	Vector3 max; //!<最大点
 };
-//struct Vector2Int {
-//	int x;
-//	int y;
-//};
+struct Vector2Int {
+	int x;
+	int y;
+};
 struct OBB {
 	Vector3 center; //!<中心点
 	Vector3 orientations[3]; //!<座標軸、正規化，直交必須
@@ -716,31 +716,82 @@ bool IsCollision(const AABB& aabb, const Segment& segment) {
 //	}
 //	return false;
 //}
-bool IsCollision(const OBB& obb, const Sphere& sphere) {
-	// OBBのワールドマトリクスの逆行列を作成
-	Matrix4x4 obbWorldMatrixInverse;
-	// 単位行列に初期化（必要に応じて行列の初期化を行ってください）
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 4; ++j) {
-			obbWorldMatrixInverse.m[i][j] = (i == j) ? 1.0f : 0.0f;
+//bool IsCollision(const OBB& obb, const Sphere& sphere) {
+//	//// OBBのワールドマトリクスの逆行列を作成
+//	//Matrix4x4 obbWorldMatrixInverse;
+//	//// 単位行列に初期化（必要に応じて行列の初期化を行ってください）
+//	//for (int i = 0; i < 4; ++i) {
+//	//	for (int j = 0; j < 4; ++j) {
+//	//		obbWorldMatrixInverse.m[i][j] = (i == j) ? 1.0f : 0.0f;
+//	//	}
+//	//}
+//	//obbWorldMatrixInverse.m[3][0] = obb.center.x;
+//	//obbWorldMatrixInverse.m[3][1] = obb.center.y;
+//	//obbWorldMatrixInverse.m[3][2] = obb.center.z;
+//	//obbWorldMatrixInverse = Inverse(obbWorldMatrixInverse);
+//	// OBBのワールドマトリクスを作成
+//	
+//	Matrix4x4 obbWorldMatrix;
+//	for (int i = 0; i < 3; ++i) {
+//		obbWorldMatrix.m[0][i] = obb.orientations[i].x;
+//		obbWorldMatrix.m[1][i] = obb.orientations[i].y;
+//		obbWorldMatrix.m[2][i] = obb.orientations[i].z;
+//	}
+//	obbWorldMatrix.m[3][0] = obb.center.x;
+//	obbWorldMatrix.m[3][1] = obb.center.y;
+//	obbWorldMatrix.m[3][2] = obb.center.z;
+//	obbWorldMatrix.m[0][3] = obbWorldMatrix.m[1][3] = obbWorldMatrix.m[2][3] = 0.0f;
+//	obbWorldMatrix.m[3][3] = 1.0f;
+//
+//	// OBBのワールドマトリクスの逆行列を作成
+//	Matrix4x4 obbWorldMatrixInverse = Inverse(obbWorldMatrix);
+//
+//	// 球の中心をOBBのローカル空間に変換
+//	Vector3 centerInOBBLocalSpace = Transform(sphere.center, obbWorldMatrixInverse);
+//
+//	// ローカル空間でのAABBを作成
+//	AABB aabbOBBLocal;
+//	aabbOBBLocal.min = { -obb.size.x, -obb.size.y, -obb.size.z };
+//	aabbOBBLocal.max = { obb.size.x,  obb.size.y,  obb.size.z };
+//
+//	// ローカル空間での球を作成
+//	Sphere sphereOBBLocal{ centerInOBBLocalSpace, sphere.radius };
+//
+//	// ローカル空間で衝突判定
+//	return IsCollision(sphereOBBLocal, aabbOBBLocal);
+//}
+bool IsCollision(const OBB& obb, const Sphere& sphere)
+{
+
+	Vector3 localSphereCenter = Subtract(sphere.center, obb.center);
+
+	Vector3 closestPoint = obb.center;
+	for (int i = 0; i < 3; ++i)
+	{
+		float distance = Dot(localSphereCenter, obb.orientations[i]);
+		if (i == 0)
+		{
+			if (distance > obb.size.x)
+				distance = obb.size.x;
+			if (distance < -obb.size.x)
+				distance = -obb.size.x;
+		} else if (i == 1)
+		{
+			if (distance > obb.size.y)
+				distance = obb.size.y;
+			if (distance < -obb.size.y)
+				distance = -obb.size.y;
+		} else if (i == 2)
+		{
+			if (distance > obb.size.z)
+				distance = obb.size.z;
+			if (distance < -obb.size.z)
+				distance = -obb.size.z;
 		}
+		closestPoint = Add(closestPoint, Multiply(distance, obb.orientations[i]));
 	}
-	obbWorldMatrixInverse.m[3][0] = obb.center.x;
-	obbWorldMatrixInverse.m[3][1] = obb.center.y;
-	obbWorldMatrixInverse.m[3][2] = obb.center.z;
-	obbWorldMatrixInverse = Inverse(obbWorldMatrixInverse);
 
-	// 球の中心をOBBのローカル空間に変換
-	Vector3 centerInOBBLocalSpace = Transform(sphere.center, obbWorldMatrixInverse);
-
-	// ローカル空間でのAABBを作成
-	AABB aabbOBBLocal;
-	aabbOBBLocal.min = { -obb.size.x, -obb.size.y, -obb.size.z };
-	aabbOBBLocal.max = { obb.size.x,  obb.size.y,  obb.size.z };
-
-	// ローカル空間での球を作成
-	Sphere sphereOBBLocal{ centerInOBBLocalSpace, sphere.radius };
-
-	// ローカル空間で衝突判定
-	return IsCollision(sphereOBBLocal, aabbOBBLocal);
+	Vector3 diff = Subtract(closestPoint, sphere.center);
+	float distanceSquared = Dot(diff, diff);
+	return distanceSquared <= (sphere.radius * sphere.radius);
 }

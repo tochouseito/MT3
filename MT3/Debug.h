@@ -1,7 +1,7 @@
 #pragma once
 #include "imgui.h"
 #include"Matrix.h"
-enum Vertexs {
+enum Vertexes {
 	frontLeftBottom,
 	frontLeftTop,
 	frontRightBottom,
@@ -61,7 +61,7 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 	}
 }
 void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMarix, uint32_t color) {
-	const uint32_t kSubdivision = 32;                          // 分割数
+	const uint32_t kSubdivision = 64;                          // 分割数
 	const float kLonEvery = 2.0f * float(M_PI) / kSubdivision; // 経度分割1つ分の角度
 	const float kLatEvery = float(M_PI) / kSubdivision;        // 緯度分割1つ分の角度
 
@@ -258,6 +258,7 @@ void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Mat
 	}
 }
 void DrawOBB(const OBB& obb, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+
 	/*AABB aabb;
 	aabb.min.x = obb.center.x - obb.size.x;
 	aabb.min.y = obb.center.y - obb.size.y;
