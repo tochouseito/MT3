@@ -1,4 +1,4 @@
-
+#define NOMINMAX
 #include <Novice.h>
 #include"Debug.h"
 #include <math.h>
@@ -28,8 +28,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		.size{0.5f,0.5f,0.5f}
 	};
 	Segment segment{
-		{-0.7f,0.3f,0.0f},
-		{2.0f,-0.5f,0.0f},
+		{-0.8f,-0.3f,0.0f},
+		{0.5f,0.5f,0.5f},
 	};
 	Sphere sphere{
 		.center{0.0f,0.0f,0.0f},
@@ -76,7 +76,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 		Vector3 start = Transform(Transform(segment.origin, ViewProjectionMatrix), viewportMatrix);
 		Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), ViewProjectionMatrix), viewportMatrix);
-		if (IsCollision(obb,sphere)) {
+		if (IsCollision(rotate,obb,segment)) {
 			AABBColor = RED;
 		} else
 		{
@@ -99,9 +99,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("OBBRotate", &rotate.x, 0.01f);
 		ImGui::End();
 		
-		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, WHITE);
+		//DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, WHITE);
 		DrawOBB(obb, ViewProjectionMatrix, viewportMatrix, AABBColor);
-		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
 
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///
