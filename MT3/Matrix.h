@@ -664,6 +664,17 @@ bool IsCollision(const Sphere& sphere, const AABB& aabb) {
 		return false;
 	}
 }
+//bool IsCollision(const AABB& aabb, const Sphere& sphere) {
+//	Vector3 clossestPoint{
+//		std::clamp(sphere.center.x, aabb.min.x, aabb.max.x),
+//		std::clamp(sphere.center.y, aabb.min.y, aabb.max.y),
+//		std::clamp(sphere.center.z, aabb.min.z, aabb.max.z)
+//	};
+//
+//	float distance = Length(Subtract(clossestPoint, sphere.center));
+//
+//	return distance <= sphere.radius;
+//}
 bool IsCollision(const AABB& aabb, const Segment& segment) {
 	float tmin = (aabb.min.x - segment.origin.x) / segment.diff.x;
 	float tmax = (aabb.max.x - segment.origin.x) / segment.diff.x;
@@ -760,38 +771,64 @@ bool IsCollision(const AABB& aabb, const Segment& segment) {
 //	// ローカル空間で衝突判定
 //	return IsCollision(sphereOBBLocal, aabbOBBLocal);
 //}
-bool IsCollision(const OBB& obb, const Sphere& sphere)
-{
+//bool IsCollision(const OBB& obb, const Sphere& sphere)
+//{
+//
+//	Vector3 localSphereCenter = Subtract(sphere.center, obb.center);
+//
+//	Vector3 closestPoint = obb.center;
+//	for (int i = 0; i < 3; ++i)
+//	{
+//		float distance = Dot(localSphereCenter, obb.orientations[i]);
+//		if (i == 0)
+//		{
+//			if (distance > obb.size.x)
+//				distance = obb.size.x;
+//			if (distance < -obb.size.x)
+//				distance = -obb.size.x;
+//		} else if (i == 1)
+//		{
+//			if (distance > obb.size.y)
+//				distance = obb.size.y;
+//			if (distance < -obb.size.y)
+//				distance = -obb.size.y;
+//		} else if (i == 2)
+//		{
+//			if (distance > obb.size.z)
+//				distance = obb.size.z;
+//			if (distance < -obb.size.z)
+//				distance = -obb.size.z;
+//		}
+//		closestPoint = Add(closestPoint, Multiply(distance, obb.orientations[i]));
+//	}
+//
+//	Vector3 diff = Subtract(closestPoint, sphere.center);
+//	float distanceSquared = Dot(diff, diff);
+//	return distanceSquared <= (sphere.radius * sphere.radius);
+//}
+Matrix4x4 MakeRotateMatrixFromOrientations(const Vector3 orientations[3]) {
+	return {
+		orientations[0].x,orientations[0].y,orientations[0].z,0.0f,
+		orientations[1].x,orientations[1].y,orientations[1].z,0.0f,
+		orientations[2].x,orientations[2].y,orientations[2].z,0.0f,
+		0.0f,0.0f,0.0f,1.0f 
+	};
+}
+Matrix4x4& SetTranslate(Matrix4x4& m, const Vector3& v) {
+	m.m[3][0] = v.x, m.m[3][1] = v.y, m.m[3][2] = v.z;
+	return m;
+}
+Matrix4x4 MakeInverseMatrix(const Matrix4x4& rotate, const Vector3& translate) {
+	Matrix4x4 RT = Transpose(rotate);
+	return SetTranslate(RT, (translate*(-1.0f)) * RT);
+}
 
-	Vector3 localSphereCenter = Subtract(sphere.center, obb.center);
 
-	Vector3 closestPoint = obb.center;
-	for (int i = 0; i < 3; ++i)
-	{
-		float distance = Dot(localSphereCenter, obb.orientations[i]);
-		if (i == 0)
-		{
-			if (distance > obb.size.x)
-				distance = obb.size.x;
-			if (distance < -obb.size.x)
-				distance = -obb.size.x;
-		} else if (i == 1)
-		{
-			if (distance > obb.size.y)
-				distance = obb.size.y;
-			if (distance < -obb.size.y)
-				distance = -obb.size.y;
-		} else if (i == 2)
-		{
-			if (distance > obb.size.z)
-				distance = obb.size.z;
-			if (distance < -obb.size.z)
-				distance = -obb.size.z;
-		}
-		closestPoint = Add(closestPoint, Multiply(distance, obb.orientations[i]));
-	}
+bool IsCollision(const OBB& obb, const Sphere& sphere) {
+	Matrix4x4 obbWorldInverse = MakeInverseMatrix(MakeRotateMatrixFromOrientations(obb.orientations), obb.center);
+	Vector3 centerInOBBLocalSpace = sphere.center * obbWorldInverse;
+	AABB aabbOBBLocal{ .min = obb.size*(-1.0f), .max = obb.size};
+	Sphere sphereObbLocal{ centerInOBBLocalSpace, sphere.radius };
 
-	Vector3 diff = Subtract(closestPoint, sphere.center);
-	float distanceSquared = Dot(diff, diff);
-	return distanceSquared <= (sphere.radius * sphere.radius);
+	return IsCollision(sphereObbLocal, aabbOBBLocal);
 }
