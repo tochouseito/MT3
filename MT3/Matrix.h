@@ -857,3 +857,29 @@ bool IsCollision(const Vector3& rotate, const OBB& obb, const Segment& line) {
 
 	return true;
 }
+Matrix4x4 MakeRotateMatrixFromOrientations(const Vector3 orientations[3]) {
+	return {
+		orientations[0].x,orientations[0].y,orientations[0].z,0.0f,
+		orientations[1].x,orientations[1].y,orientations[1].z,0.0f,
+		orientations[2].x,orientations[2].y,orientations[2].z,0.0f,
+		0.0f,0.0f,0.0f,1.0f
+	};
+}
+Matrix4x4& SetTranslate(Matrix4x4& m, const Vector3& v) {
+	m.m[3][0] = v.x, m.m[3][1] = v.y, m.m[3][2] = v.z;
+	return m;
+}
+Matrix4x4 MakeInverseMatrix(const Matrix4x4& rotate, const Vector3& translate) {
+	Matrix4x4 RT = Transpose(rotate);
+	return SetTranslate(RT, (translate * (-1.0f)) * RT);
+}
+
+
+bool IsCollision(const OBB& obb, const Sphere& sphere) {
+	Matrix4x4 obbWorldInverse = MakeInverseMatrix(MakeRotateMatrixFromOrientations(obb.orientations), obb.center);
+	Vector3 centerInOBBLocalSpace = sphere.center * obbWorldInverse;
+	AABB aabbOBBLocal{ .min = obb.size * (-1.0f), .max = obb.size };
+	Sphere sphereObbLocal{ centerInOBBLocalSpace, sphere.radius };
+
+	return IsCollision(sphereObbLocal, aabbOBBLocal);
+}
