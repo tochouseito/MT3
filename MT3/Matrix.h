@@ -765,41 +765,41 @@ bool IsCollision(const AABB& aabb, const Segment& segment) {
 //	// ローカル空間で衝突判定
 //	return IsCollision(sphereOBBLocal, aabbOBBLocal);
 //}
-bool IsCollision(const OBB& obb, const Sphere& sphere)
-{
-
-	Vector3 localSphereCenter = Subtract(sphere.center, obb.center);
-
-	Vector3 closestPoint = obb.center;
-	for (int i = 0; i < 3; ++i)
-	{
-		float distance = Dot(localSphereCenter, obb.orientations[i]);
-		if (i == 0)
-		{
-			if (distance > obb.size.x)
-				distance = obb.size.x;
-			if (distance < -obb.size.x)
-				distance = -obb.size.x;
-		} else if (i == 1)
-		{
-			if (distance > obb.size.y)
-				distance = obb.size.y;
-			if (distance < -obb.size.y)
-				distance = -obb.size.y;
-		} else if (i == 2)
-		{
-			if (distance > obb.size.z)
-				distance = obb.size.z;
-			if (distance < -obb.size.z)
-				distance = -obb.size.z;
-		}
-		closestPoint = Add(closestPoint, Multiply(distance, obb.orientations[i]));
-	}
-
-	Vector3 diff = Subtract(closestPoint, sphere.center);
-	float distanceSquared = Dot(diff, diff);
-	return distanceSquared <= (sphere.radius * sphere.radius);
-}
+//bool IsCollision(const OBB& obb, const Sphere& sphere)
+//{
+//
+//	Vector3 localSphereCenter = Subtract(sphere.center, obb.center);
+//
+//	Vector3 closestPoint = obb.center;
+//	for (int i = 0; i < 3; ++i)
+//	{
+//		float distance = Dot(localSphereCenter, obb.orientations[i]);
+//		if (i == 0)
+//		{
+//			if (distance > obb.size.x)
+//				distance = obb.size.x;
+//			if (distance < -obb.size.x)
+//				distance = -obb.size.x;
+//		} else if (i == 1)
+//		{
+//			if (distance > obb.size.y)
+//				distance = obb.size.y;
+//			if (distance < -obb.size.y)
+//				distance = -obb.size.y;
+//		} else if (i == 2)
+//		{
+//			if (distance > obb.size.z)
+//				distance = obb.size.z;
+//			if (distance < -obb.size.z)
+//				distance = -obb.size.z;
+//		}
+//		closestPoint = Add(closestPoint, Multiply(distance, obb.orientations[i]));
+//	}
+//
+//	Vector3 diff = Subtract(closestPoint, sphere.center);
+//	float distanceSquared = Dot(diff, diff);
+//	return distanceSquared <= (sphere.radius * sphere.radius);
+//}
 
 /// <summary>
 /// OBBと線の当たり判定
@@ -808,55 +808,55 @@ bool IsCollision(const OBB& obb, const Sphere& sphere)
 /// <param name="obb"></param>
 /// <param name="line"></param>
 /// <returns></returns>
-bool IsCollision(const Vector3& rotate, const OBB& obb, const Segment& line) {
-
-	// 回転行列の計算（オイラー角から回転行列を計算）
-	Matrix4x4 rotateX = MakeRotateXMatrix(rotate.x);
-	Matrix4x4 rotateY = MakeRotateYMatrix(rotate.y);
-	Matrix4x4 rotateZ = MakeRotateZMatrix(rotate.z);
-	Matrix4x4 rotateMatrix = Multiply(rotateX, Multiply(rotateY, rotateZ));
-
-	// OBBの軸を回転させる
-	Vector3 orientations[3];
-	orientations[0] = Transform(obb.orientations[0], rotateMatrix);
-	orientations[1] = Transform(obb.orientations[1], rotateMatrix);
-	orientations[2] = Transform(obb.orientations[2], rotateMatrix);
-
-	// 線分の始点と終点をOBBのローカル座標系に変換
-	Vector3 lineStartLocal = line.origin - obb.center;
-	Vector3 lineEndLocal = lineStartLocal + line.diff;
-
-	// 各軸ごとにローカル座標に変換
-	Vector3 lineStartTransformed = { Dot(lineStartLocal, orientations[0]), Dot(lineStartLocal, orientations[1]), Dot(lineStartLocal, orientations[2]) };
-	Vector3 lineEndTransformed = { Dot(lineEndLocal, orientations[0]), Dot(lineEndLocal, orientations[1]), Dot(lineEndLocal, orientations[2]) };
-
-	// 線分とAABBの当たり判定
-	Vector3 boxMin = { -obb.size.x, -obb.size.y, -obb.size.z };
-	Vector3 boxMax = { obb.size.x, obb.size.y, obb.size.z };
-
-	// 線分とAABBの当たり判定を行う
-	float tMin = 0.0f;
-	float tMax = 1.0f;
-
-	for (int i = 0; i < 3; ++i) {
-		float start = (&lineStartTransformed.x)[i];
-		float end = (&lineEndTransformed.x)[i];
-		float min = (&boxMin.x)[i];
-		float max = (&boxMax.x)[i];
-
-		float t0 = (min - start) / (end - start);
-		float t1 = (max - start) / (end - start);
-
-		if (t0 > t1) std::swap(t0, t1);
-
-		tMin = t0 > tMin ? t0 : tMin;
-		tMax = t1 < tMax ? t1 : tMax;
-
-		if (tMin > tMax) return false;
-	}
-
-	return true;
-}
+//bool IsCollision(const Vector3& rotate, const OBB& obb, const Segment& line) {
+//
+//	// 回転行列の計算（オイラー角から回転行列を計算）
+//	Matrix4x4 rotateX = MakeRotateXMatrix(rotate.x);
+//	Matrix4x4 rotateY = MakeRotateYMatrix(rotate.y);
+//	Matrix4x4 rotateZ = MakeRotateZMatrix(rotate.z);
+//	Matrix4x4 rotateMatrix = Multiply(rotateX, Multiply(rotateY, rotateZ));
+//
+//	// OBBの軸を回転させる
+//	Vector3 orientations[3];
+//	orientations[0] = Transform(obb.orientations[0], rotateMatrix);
+//	orientations[1] = Transform(obb.orientations[1], rotateMatrix);
+//	orientations[2] = Transform(obb.orientations[2], rotateMatrix);
+//
+//	// 線分の始点と終点をOBBのローカル座標系に変換
+//	Vector3 lineStartLocal = line.origin - obb.center;
+//	Vector3 lineEndLocal = lineStartLocal + line.diff;
+//
+//	// 各軸ごとにローカル座標に変換
+//	Vector3 lineStartTransformed = { Dot(lineStartLocal, orientations[0]), Dot(lineStartLocal, orientations[1]), Dot(lineStartLocal, orientations[2]) };
+//	Vector3 lineEndTransformed = { Dot(lineEndLocal, orientations[0]), Dot(lineEndLocal, orientations[1]), Dot(lineEndLocal, orientations[2]) };
+//
+//	// 線分とAABBの当たり判定
+//	Vector3 boxMin = { -obb.size.x, -obb.size.y, -obb.size.z };
+//	Vector3 boxMax = { obb.size.x, obb.size.y, obb.size.z };
+//
+//	// 線分とAABBの当たり判定を行う
+//	float tMin = 0.0f;
+//	float tMax = 1.0f;
+//
+//	for (int i = 0; i < 3; ++i) {
+//		float start = (&lineStartTransformed.x)[i];
+//		float end = (&lineEndTransformed.x)[i];
+//		float min = (&boxMin.x)[i];
+//		float max = (&boxMax.x)[i];
+//
+//		float t0 = (min - start) / (end - start);
+//		float t1 = (max - start) / (end - start);
+//
+//		if (t0 > t1) std::swap(t0, t1);
+//
+//		tMin = t0 > tMin ? t0 : tMin;
+//		tMax = t1 < tMax ? t1 : tMax;
+//
+//		if (tMin > tMax) return false;
+//	}
+//
+//	return true;
+//}
 Matrix4x4 MakeRotateMatrixFromOrientations(const Vector3 orientations[3]) {
 	return {
 		orientations[0].x,orientations[0].y,orientations[0].z,0.0f,
@@ -882,4 +882,20 @@ bool IsCollision(const OBB& obb, const Sphere& sphere) {
 	Sphere sphereObbLocal{ centerInOBBLocalSpace, sphere.radius };
 
 	return IsCollision(sphereObbLocal, aabbOBBLocal);
+}
+bool IsCollision(const OBB& obb, const Segment segment) {
+	Matrix4x4 obbWorldInverse = MakeInverseMatrix(MakeRotateMatrixFromOrientations(obb.orientations), obb.center);
+	// 線分の始点と終点をOBBのローカル座標系に変換
+	Vector3 lineStartLocal = segment.origin - obb.center;
+	Vector3 lineEndLocal = lineStartLocal + segment.diff;
+
+	// 各軸ごとにローカル座標に変換
+	Vector3 lineStartTransformed = { Dot(lineStartLocal, obb.orientations[0]), Dot(lineStartLocal, obb.orientations[1]), Dot(lineStartLocal, obb.orientations[2]) };
+	Vector3 lineEndTransformed = { Dot(lineEndLocal, obb.orientations[0]), Dot(lineEndLocal, obb.orientations[1]), Dot(lineEndLocal, obb.orientations[2]) };
+	Segment segmentLocal = { .origin = lineStartTransformed,.diff = lineEndTransformed - lineStartTransformed };
+	//Vector3 centerInOBBLocalSpace = sphere.center * obbWorldInverse;
+	AABB aabbOBBLocal{ .min = obb.size * (-1.0f), .max = obb.size };
+	//Sphere sphereObbLocal{ centerInOBBLocalSpace, sphere.radius };
+	return IsCollision(aabbOBBLocal, segmentLocal);
+	//return IsCollision(sphereObbLocal, aabbOBBLocal);
 }
