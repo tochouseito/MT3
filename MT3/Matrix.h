@@ -899,3 +899,96 @@ bool IsCollision(const OBB& obb, const Segment segment) {
 	return IsCollision(aabbOBBLocal, segmentLocal);
 	//return IsCollision(sphereObbLocal, aabbOBBLocal);
 }
+/////////////////////////////////////////////////////
+//float ProjectOBB(const OBB& obb, const Vector3& axis) {
+//	return obb.size.x * abs(axis.Dot(obb.orientations[0])) +
+//		obb.size.y * abs(axis.Dot(obb.orientations[1])) +
+//		obb.size.z * abs(axis.Dot(obb.orientations[2]));
+//}
+void ProjectOBB(const Vector3& axis, const OBB& obb, float& min, float& max) {
+	// 中心を投影
+	float center = obb.center.Dot(axis);
+
+	// ハーフサイズを投影
+	float extents =
+		obb.size.x * fabs(obb.orientations[0].Dot(axis)) +
+		obb.size.y * fabs(obb.orientations[1].Dot(axis)) +
+		obb.size.z * fabs(obb.orientations[2].Dot(axis));
+
+	min = center - extents;
+	max = center + extents;
+}
+//bool OverlapOnAxis(const OBB& obb1, const OBB& obb2, const Vector3& axis) {
+//	float proj1 = ProjectOBB(obb1, axis);
+//	float proj2 = ProjectOBB(obb2, axis);
+//	float distance = abs((obb2.center - obb1.center).Dot(axis));
+//	return distance < (proj1 + proj2);
+//}
+bool OverlapOnAxis(const OBB& a, const OBB& b, const Vector3& axis) {
+	float aMin, aMax;
+	float bMin, bMax;
+
+	// AとBの投影範囲を取得
+	ProjectOBB(axis, a, aMin, aMax);
+	ProjectOBB(axis, b, bMin, bMax);
+
+	// 投影範囲が重なるかどうかを判定
+	return (aMin <= bMax && aMax >= bMin);
+}
+Matrix4x4 CreateRotationMatrix(float yaw, float pitch, float roll) {
+	Matrix4x4 rotX = {
+		1, 0, 0, 0,
+		0, cos(pitch), -sin(pitch), 0,
+		0, sin(pitch), cos(pitch), 0,
+		0, 0, 0, 1
+	};
+
+	Matrix4x4 rotY = {
+		cos(yaw), 0, sin(yaw), 0,
+		0, 1, 0, 0,
+		-sin(yaw), 0, cos(yaw), 0,
+		0, 0, 0, 1
+	};
+
+	Matrix4x4 rotZ = {
+		cos(roll), -sin(roll), 0, 0,
+		sin(roll), cos(roll), 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+	Matrix4x4 result = Multiply(rotX, Multiply(rotY, rotZ));
+	return result;// 行列の積
+}
+
+void RotateOBB(OBB& obb, float yaw, float pitch, float roll) {
+	Matrix4x4 rotationMatrix = CreateRotationMatrix(yaw, pitch, roll);
+	for (int i = 0; i < 3; ++i) {
+		obb.orientations[i] = obb.orientations[i]*rotationMatrix;
+	}
+}
+bool OBBIntersect(const OBB& obb1, const OBB& obb2) {
+	// まず中心点の差分を計算
+	Vector3 d = obb2.center - obb1.center;
+
+	// 各OBBの軸を取得
+	Vector3 axis1[3] = { obb1.orientations[0], obb1.orientations[1], obb1.orientations[2] };
+	Vector3 axis2[3] = { obb2.orientations[0], obb2.orientations[1], obb2.orientations[2] };
+
+	// 15個の分離軸に対してチェック
+	for (int i = 0; i < 3; ++i) {
+		if (!OverlapOnAxis(obb1, obb2, axis1[i])) return false;
+		if (!OverlapOnAxis(obb1, obb2, axis2[i])) return false;
+	}
+
+	// クロスプロダクトの軸もチェック
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			//Vector3 axis = Cross(axis1[i], axis2[j]);
+			Vector3 axis = axis1[i].Cross(axis2[j]);
+			if (!OverlapOnAxis(obb1, obb2, axis)) return false;
+		}
+	}
+
+	return true;
+}
+
