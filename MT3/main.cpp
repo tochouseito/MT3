@@ -18,10 +18,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraRotate{ 0.26f, 0.0f, 0.0f };
 	Vector3 cameraPosition{ 0.0f, 1.0f, -5.0f };
 	
-	Vector3 constrolPoints[3] = {
+	Vector3 constrolPoints[4] = {
 		{-0.8f,0.58f,1.0f},
 		{1.76f,1.0f,-0.3f},
 		{0.94f,-0.7f,2.3f},
+		{-0.53f,-0.26f,-0.15f}
 	};
 	
 	static bool isDebugCamera = false;
@@ -75,11 +76,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("Point0", &constrolPoints[0].x, 0.01f);
 		ImGui::DragFloat3("Point1", &constrolPoints[1].x, 0.01f);
 		ImGui::DragFloat3("Point2", &constrolPoints[2].x, 0.01f);
+		ImGui::DragFloat3("Point3", &constrolPoints[3].x, 0.01f);
 
 		ImGui::End();
 		
 		
-		DrawBezier(constrolPoints[0], constrolPoints[1], constrolPoints[2], ViewProjectionMatrix, viewportMatrix, BLUE);
+		DrawCatmullRom(constrolPoints[0], constrolPoints[1], constrolPoints[2], constrolPoints[3], ViewProjectionMatrix, viewportMatrix, BLUE);
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///
 		/// ↑描画処理ここまで
