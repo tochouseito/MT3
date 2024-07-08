@@ -52,6 +52,22 @@ struct OBB {
 	Vector3 orientations[3]; //!<座標軸、正規化，直交必須
 	Vector3 size; //!< 座標方向の長さの半分。中心から面までの距離
 };
+struct Spring{
+	// アンカー。固定された端の位置
+	Vector3 anchor;
+	float naturalLength;// 自然長
+	float stiffness;// 剛性。ばね定数k
+	float dampingCoefficient;// 減衰係数
+};
+struct Ball {
+	Vector3 position;
+	Vector3 velocity;
+	Vector3 acceleration;
+	float mass;
+	float radius;
+	unsigned int color;
+
+};
 // 加算
 Vector3 Add(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
