@@ -82,6 +82,10 @@ struct ConicalPendulum {
 	float angle; //現在の角度
 	float angularVelocity;//角速度
 };
+struct Capsule {
+	Segment segment;
+	float radius;
+};
 // 加算
 Vector3 Add(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
@@ -1085,4 +1089,9 @@ void DrawCatmullRom(const Vector3& controlPoint0, const Vector3& controlPoint1, 
 
 		previousPoint = point;
 	}
+}
+Vector3 Reflect(const Vector3& input, const Vector3& normal) {
+	Vector3 normalizedNormal = normal * (1.0f / sqrt(normal.Dot(normal))); // 正規化された法線ベクトル
+	float dotProduct = input.Dot(normalizedNormal);
+	return input - normalizedNormal * (2 * dotProduct);
 }
