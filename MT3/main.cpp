@@ -7,7 +7,33 @@
 const char kWindowTitle[] = "LE2B_27_ヤラ_チョウセイ";
 int kWindowWidth = 1280;
 int kWindowHeight = 720;
+void UpdateBall(Ball& ball, const Plane& plane, float deltaTime, float e) {
+	// 速度と位置を更新
+	ball.velocity += ball.acceleration * deltaTime;
+	Vector3 newPosition = ball.position + ball.velocity * deltaTime;
 
+	// 現在の位置から新しい位置までのセグメントを作成
+	Capsule capsule;
+	capsule.segment.origin = ball.position;
+	capsule.segment.diff = newPosition - ball.position;
+	capsule.radius = ball.radius;
+
+	// 平面との衝突をチェック
+	if (IsCollision(capsule, plane)) {
+		// 衝突を処理
+		Vector3 reflected = Reflect(ball.velocity, plane.normal);
+		Vector3 projectToNormal = Project(reflected, plane.normal);
+		Vector3 movingDirection = reflected - projectToNormal;
+		ball.velocity = projectToNormal * e + movingDirection;
+
+		// 位置を修正
+		float t = (plane.distance - Dot(capsule.segment.origin, plane.normal)) / Dot(plane.normal, capsule.segment.diff);
+		ball.position = capsule.segment.origin + capsule.segment.diff * t - plane.normal * ball.radius;
+	} else {
+		// 衝突がない場合は新しい位置に移動
+		ball.position = newPosition;
+	}
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
@@ -33,10 +59,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ball.color = WHITE;
 	ball.acceleration = { 0.0f,-9.8f,0.0f };
 	// カプセルの生成
-	Capsule capsule;
+	/*Capsule capsule;
 	capsule.segment.origin = ball.position;
 	capsule.segment.diff = ball.velocity * deltaTime;
-	capsule.radius = ball.radius;
+	capsule.radius = ball.radius;*/
 
 	Vector3 p{};
 	float e = 0.1f;
@@ -69,28 +95,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		if (move) {
-			ball.velocity += ball.acceleration * deltaTime;
-			/*ball.position += ball.velocity * deltaTime;
+			/*ball.velocity += ball.acceleration * deltaTime;
+			ball.position += ball.velocity * deltaTime;
 			if (IsCollision(Sphere{ ball.position,ball.radius }, plane)) {
 				Vector3 reflected = Reflect(ball.velocity, plane.normal);
 				Vector3 projectToNormal = Project(reflected, plane.normal);
 				Vector3 movingDirection = reflected - projectToNormal;
 				ball.velocity = projectToNormal * e + movingDirection;
 			}*/
-			Vector3 collisionPoint;
-			if (IsCollision(capsule, plane, collisionPoint)) {
-				// 衝突処理
-				Vector3 reflected = Reflect(ball.velocity, plane.normal);
-				Vector3 projectToNormal = Project(reflected, plane.normal);
-				Vector3 movingDirection = reflected - projectToNormal;
-				ball.velocity = projectToNormal * e + movingDirection;
-
-				// 衝突点に位置を更新
-				ball.position = collisionPoint;
-			} else {
-				// 衝突していない場合は通常の移動
-				ball.position += ball.velocity * deltaTime;
-			}
+			UpdateBall(ball, plane, deltaTime, e);
 			p.x = ball.position.x;
 			p.y = ball.position.y;
 			p.z = ball.position.z;
