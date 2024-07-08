@@ -23,7 +23,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	float deltaTime = 1.0f / 60.0f;
 
 	Plane plane;
-	plane.normal =Normalize( { -0.2f,0.9f,-0.3f });
+	plane.normal =Normalize( { -0.2f,1.2f,-0.3f });
 	plane.distance = 0.0f;
 
 	Ball ball{};
@@ -32,6 +32,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ball.radius = 0.05f;
 	ball.color = WHITE;
 	ball.acceleration = { 0.0f,-9.8f,0.0f };
+	// カプセルの生成
+	Capsule capsule;
+	capsule.segment.origin = ball.position;
+	capsule.segment.diff = ball.velocity * deltaTime;
+	capsule.radius = ball.radius;
 
 	Vector3 p{};
 	float e = 0.1f;
@@ -65,12 +70,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		if (move) {
 			ball.velocity += ball.acceleration * deltaTime;
-			ball.position += ball.velocity * deltaTime;
+			/*ball.position += ball.velocity * deltaTime;
 			if (IsCollision(Sphere{ ball.position,ball.radius }, plane)) {
 				Vector3 reflected = Reflect(ball.velocity, plane.normal);
 				Vector3 projectToNormal = Project(reflected, plane.normal);
 				Vector3 movingDirection = reflected - projectToNormal;
 				ball.velocity = projectToNormal * e + movingDirection;
+			}*/
+			Vector3 collisionPoint;
+			if (IsCollision(capsule, plane, collisionPoint)) {
+				// 衝突処理
+				Vector3 reflected = Reflect(ball.velocity, plane.normal);
+				Vector3 projectToNormal = Project(reflected, plane.normal);
+				Vector3 movingDirection = reflected - projectToNormal;
+				ball.velocity = projectToNormal * e + movingDirection;
+
+				// 衝突点に位置を更新
+				ball.position = collisionPoint;
+			} else {
+				// 衝突していない場合は通常の移動
+				ball.position += ball.velocity * deltaTime;
 			}
 			p.x = ball.position.x;
 			p.y = ball.position.y;
@@ -99,6 +118,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		if (ImGui::Button("start")) {
 			move = true;
+			ball.position = { 0.8f,1.2f,0.3f };
 		}
 		
 		ImGui::End();

@@ -1090,7 +1090,22 @@ void DrawCatmullRom(const Vector3& controlPoint0, const Vector3& controlPoint1, 
 	}
 }
 Vector3 Reflect(const Vector3& input, const Vector3& normal) {
-	Vector3 normalizedNormal = normal * (1.0f / sqrt(normal.Dot(normal))); // 正規化された法線ベクトル
+	Vector3 normalizedNormal = normal * (1.0f / static_cast<float>(sqrt(normal.Dot(normal)))); // 正規化された法線ベクトル
 	float dotProduct = input.Dot(normalizedNormal);
-	return input - normalizedNormal * (2 * dotProduct);
+	return input - normalizedNormal * (2.0f * dotProduct);
+}
+bool IsCollision(const Capsule& capsule, const Plane& plane) {
+	Segment segment = capsule.segment;
+	float radius = capsule.radius;
+
+	Vector3 closestPoint;
+	float t = (plane.distance - Dot(segment.origin, plane.normal)) / Dot(segment.diff, plane.normal);
+
+	if (t < 0.0f) t = 0.0f;
+	if (t > 1.0f) t = 1.0f;
+
+	closestPoint = segment.origin + segment.diff * t;
+
+	float distance = Dot(closestPoint, plane.normal) - plane.distance;
+	return abs(distance) <= radius;
 }
