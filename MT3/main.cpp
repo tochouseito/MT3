@@ -165,7 +165,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	sphere2.center = { 0, 0, 1 };
 	sphere2.radius = 0.5f;
 	int sphere2color = 0;
-	int mouseX = 0, mouseY = 0;
+	//int mouseX = 0, mouseY = 0;
 	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 	Vector3 point{ -1.5f,0.6f,0.6f };
 	Sphere pointSphere{ point,0.01f };
