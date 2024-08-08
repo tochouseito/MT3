@@ -48,17 +48,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//float deltaTime = 1.0f / 60.0f;
 
-	Vector3 from0 = Normalize(Vector3{ 1.0f,0.7f,0.5f });
-	Vector3 to0 = -from0;
-	Vector3 from1 = Normalize(Vector3{ -0.6f,0.9f,0.2f });
-	Vector3 to1 = Normalize(Vector3{ 0.4f,0.7f,-0.5f });
-	Matrix4x4 rotateMatrix0 = DirectionToDirection(
-		Normalize(Vector3{ 1.0f,0.0f,0.0f }), Normalize(Vector3{ -1.0f, 0.0f, 0.0f }));
-	Matrix4x4 rotateMatrix1 = DirectionToDirection(from0, to0);
-	Matrix4x4 rotateMatrix2 = DirectionToDirection(from1, to1);
 	
+	Quaternion q1 = { 2.0f,3.0f,4.0f,1.0f };
+	Quaternion q2 = { 1.0f,3.0f,5.0f,2.0f };
+	Quaternion identity = IdentityQuaternion();
+	Quaternion conj = Conjugate(q1);
+	Quaternion inv = Inverse(q1);
+	Quaternion normal = Normalize(q1);
+	Quaternion mul1 = Multiply(q1, q2);
+	Quaternion mul2 = Multiply(q2, q1);
+	float norm = Norm(q1);
 	
-
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
@@ -86,9 +86,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		
-		MatrixScreenPrintf(0, 0, rotateMatrix0);
-		MatrixScreenPrintf(0, kRowHeight * 5, rotateMatrix1);
-		MatrixScreenPrintf(0, kRowHeight * 10, rotateMatrix2);
+		Novice::ScreenPrintf(0, 0, "%6.02f  %6.02f  %6.02f  %6.02f", identity.x, identity.y, identity.z, identity.w);
+		Novice::ScreenPrintf(0, kRowHeight * 5, "%6.02f", norm);
 		///
 		/// ↑更新処理ここまで
 		///
