@@ -124,12 +124,20 @@ float Length(const Vector3& v) {
 }
 // 正規化
 Vector3 Normalize(const Vector3& v) {
-	Vector3 result;
+	/*Vector3 result;
 	result.x = float(v.x / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
 	result.y = float(v.y / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
 	result.z = float(v.z / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
 
-	return result;
+	return result;*/
+	float length = std::sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
+
+	// もしベクトルの長さがゼロの場合、ゼロベクトルを返す
+	if (length == 0.0f) {
+		return { 0.0f, 0.0f, 0.0f };
+	}
+
+	return { v.x / length, v.y / length, v.z / length };
 }
 // ベクトルの大きさの2乗を計算する関数
 float MagnitudeSquared(const Vector3& v) {
@@ -1146,5 +1154,25 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
 
 	rotateMatrix = Transpose(rotateMatrix);
 
+	return rotateMatrix;
+}
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
+	Matrix4x4 rotateMatrix = { 0.0f };
+	Vector3 n = Normalize(Cross(from, to));
+	if (from == -to) {
+		if (from.x != 0.0f || from.y != 0.0f) {
+			n = Vector3{ from.y,-from.x,0.0f };
+		} else if (from.x != 0.0f || from.z != 0.0f) {
+			n = Vector3{ from.z,0.0f,-from.x };
+		}
+	}
+	float cosTheta = Dot(from, to);
+	float sinTheta = Length(Cross(from,to));
+	rotateMatrix = {
+		(n.x * n.x) * (1 - cosTheta) +    	   cosTheta,(n.x * n.y) * (1 - cosTheta) + (n.z * sinTheta),(n.x * n.z) * (1 - cosTheta) - (n.y * sinTheta),0.0f,
+		(n.x * n.y) * (1 - cosTheta) - (n.z * sinTheta),(n.y * n.y) * (1 - cosTheta) + cosTheta,(n.y * n.z) * (1 - cosTheta) + (n.x * sinTheta),0.0f,
+		(n.x * n.z) * (1 - cosTheta) + (n.y * sinTheta),(n.y * n.z) * (1 - cosTheta) - (n.x * sinTheta),(n.z * n.z) * (1 - cosTheta) + cosTheta,0.0f,
+		0.0f,0.0f,0.0f,1.0f
+	};
 	return rotateMatrix;
 }
