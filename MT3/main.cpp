@@ -46,28 +46,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	static bool isDebugCamera = false;
 	Vector2Int mouse;
 
-	float deltaTime = 1.0f / 60.0f;
+	//float deltaTime = 1.0f / 60.0f;
 
-	Plane plane;
-	plane.normal =Normalize( { -0.2f,1.2f,-0.3f });
-	plane.distance = 0.0f;
+	Vector3 axis = Normalize({ 1.0f,1.0f,1.0f });
+	float angle = 0.44f;
+	Matrix4x4 rotateMatrix = MakeRotateAxisAngle(axis, angle);
+	
+	
 
-	Ball ball{};
-	ball.position = { 0.8f,1.2f,0.3f };
-	ball.mass = 2.0f;
-	ball.radius = 0.05f;
-	ball.color = WHITE;
-	ball.acceleration = { 0.0f,-9.8f,0.0f };
-	// カプセルの生成
-	/*Capsule capsule;
-	capsule.segment.origin = ball.position;
-	capsule.segment.diff = ball.velocity * deltaTime;
-	capsule.radius = ball.radius;*/
-
-	Vector3 p{};
-	float e = 0.1f;
-	Sphere sphere{};
-	bool move = false;
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
@@ -85,7 +71,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		if (keys[DIK_SPACE] && preKeys[DIK_SPACE] == 0) {
+		if (keys[DIK_C] && preKeys[DIK_C] == 0) {
 			isDebugCamera = !isDebugCamera;
 		}
 		CameraMove(cameraRotate, cameraTranslate, mouse, isDebugCamera);
@@ -94,25 +80,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-		if (move) {
-			/*ball.velocity += ball.acceleration * deltaTime;
-			ball.position += ball.velocity * deltaTime;
-			if (IsCollision(Sphere{ ball.position,ball.radius }, plane)) {
-				Vector3 reflected = Reflect(ball.velocity, plane.normal);
-				Vector3 projectToNormal = Project(reflected, plane.normal);
-				Vector3 movingDirection = reflected - projectToNormal;
-				ball.velocity = projectToNormal * e + movingDirection;
-			}*/
-			UpdateBall(ball, plane, deltaTime, e);
-			p.x = ball.position.x;
-			p.y = ball.position.y;
-			p.z = ball.position.z;
-		}
-		sphere.center = p;
-		sphere.radius = 0.05f;
-		Vector3 transformedPrev = Transform(p, ViewProjectionMatrix);
-		transformedPrev = Transform(transformedPrev, viewportMatrix);
 		
+		MatrixScreenPrintf(0, 0, rotateMatrix);
 		///
 		/// ↑更新処理ここまで
 		///
@@ -127,16 +96,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
 		ImGui::End();
 
-		ImGui::Begin("Window");
-
-		if (ImGui::Button("start")) {
-			move = true;
-			ball.position = { 0.8f,1.2f,0.3f };
-		}
 		
-		ImGui::End();
-		DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, WHITE);
-		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, WHITE);
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///
 		/// ↑描画処理ここまで

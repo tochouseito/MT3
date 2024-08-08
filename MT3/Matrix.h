@@ -544,7 +544,7 @@ static const int kColumnWidth = 60;
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix) {
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
-			Novice::ScreenPrintf(x + column * kColumnWidth, y + row * kRowHeight, "%6.02f", matrix.m[row][column]);
+			Novice::ScreenPrintf(x + column * kColumnWidth, y + row * kRowHeight, "%6.03f", matrix.m[row][column]);
 		}
 	}
 }
@@ -1108,4 +1108,43 @@ bool IsCollision(const Capsule& capsule, const Plane& plane) {
 
 	float distance = Dot(closestPoint, plane.normal) - plane.distance;
 	return abs(distance) <= radius;
+}
+Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
+	Vector3 normAxis = axis;
+	float axisLength = std::sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+	if (axisLength != 0.0f) {
+		normAxis.x /= axisLength;
+		normAxis.y /= axisLength;
+		normAxis.z /= axisLength;
+	}
+
+	float cosTheta = std::cos(angle);
+	float sinTheta = std::sin(angle);
+	float oneMinusCosTheta = 1.0f - cosTheta;
+
+	Matrix4x4 rotateMatrix;
+
+	rotateMatrix.m[0][0] = cosTheta + normAxis.x * normAxis.x * oneMinusCosTheta;
+	rotateMatrix.m[0][1] = normAxis.x * normAxis.y * oneMinusCosTheta - normAxis.z * sinTheta;
+	rotateMatrix.m[0][2] = normAxis.x * normAxis.z * oneMinusCosTheta + normAxis.y * sinTheta;
+	rotateMatrix.m[0][3] = 0.0f;
+
+	rotateMatrix.m[1][0] = normAxis.y * normAxis.x * oneMinusCosTheta + normAxis.z * sinTheta;
+	rotateMatrix.m[1][1] = cosTheta + normAxis.y * normAxis.y * oneMinusCosTheta;
+	rotateMatrix.m[1][2] = normAxis.y * normAxis.z * oneMinusCosTheta - normAxis.x * sinTheta;
+	rotateMatrix.m[1][3] = 0.0f;
+
+	rotateMatrix.m[2][0] = normAxis.z * normAxis.x * oneMinusCosTheta - normAxis.y * sinTheta;
+	rotateMatrix.m[2][1] = normAxis.z * normAxis.y * oneMinusCosTheta + normAxis.x * sinTheta;
+	rotateMatrix.m[2][2] = cosTheta + normAxis.z * normAxis.z * oneMinusCosTheta;
+	rotateMatrix.m[2][3] = 0.0f;
+
+	rotateMatrix.m[3][0] = 0.0f;
+	rotateMatrix.m[3][1] = 0.0f;
+	rotateMatrix.m[3][2] = 0.0f;
+	rotateMatrix.m[3][3] = 1.0f;
+
+	rotateMatrix = Transpose(rotateMatrix);
+
+	return rotateMatrix;
 }
